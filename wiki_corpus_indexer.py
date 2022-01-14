@@ -26,15 +26,11 @@ ix = create_in("wiki_index", schema)
 
 writer = ix.writer()
 
-csvFile = open("corpus/wiki_corpus.csv", mode="r", encoding="utf-8")
-csv_reader = csv.reader(csvFile, delimiter=",");
+csvFile = open("corpus/wiki_corpus_reduced.csv", mode="r", encoding="utf-8")
+csv_reader = csv.reader(csvFile, delimiter=",")
 line_count = 0
 print("Inizio analisi")
-accepted_origin = ["American", "British", "Canadian", "Australian"]
 for row in csv_reader:
-    if row[2] not in accepted_origin:
-        print("ciao")
-        continue
     releaseYear = row[0]
     title = row[1]
     origin = row[2]
