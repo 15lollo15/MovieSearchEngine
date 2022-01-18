@@ -12,7 +12,7 @@ charmap = charset_table_to_dict(default_charset)
 my_analyzer = StemmingAnalyzer() | CharsetFilter(charmap)
 
 schema = Schema(id = ID(stored=True),
-                title = TEXT(stored = True),
+                title = TEXT(analyzer = my_analyzer, stored = True),
                 audienceScore = NUMERIC(stored = True),
                 tomatometerScore = NUMERIC(stored = True),
                 rating = TEXT(stored = True),
