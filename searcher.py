@@ -128,7 +128,7 @@ resultsImdb = searchIn(IMDB_INDEX,b"freddy krueger")
 imdb_dict = toDictionary(resultsImdb)
 print(imdb_dict)
 
-print("\rotten results")
+print("\nrotten results")
 resultsRotten = searchIn(ROTTEN_INDEX,b"freddy krueger")
 rotten_dict = toDictionary(resultsRotten)
 print(rotten_dict)
