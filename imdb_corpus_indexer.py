@@ -12,8 +12,9 @@ charmap = charset_table_to_dict(default_charset)
 my_analyzer = StemmingAnalyzer() | CharsetFilter(charmap)
 
 schema = Schema(
-                title = ID(stored = True),
-                releaseYear = ID(stored= True),
+                id = ID(stored = True),
+                title = TEXT(analyzer = my_analyzer, stored = True),
+                releaseYear = NUMERIC(stored= True),
                 rating = TEXT(stored = True),
                 genres = KEYWORD(stored = True, commas = True),
                 score = NUMERIC(stored = True, numtype=float),
@@ -28,10 +29,12 @@ ix = create_in("imdb_index", schema)
 
 writer = ix.writer()
 
-csvFile = open("corpus/imdb_corpus.csv", mode="r", encoding="utf-8")
+csvFile = open("corpus/imdb_corpus_clean.csv", mode="r", encoding="utf-8")
 line_count = 0
 print("Inizio analisi")
 for line in csvFile:
+    if line_count >= 1000:
+        break;
     print(line_count)
     row = line.split(";;")
     title = row[0]
@@ -44,6 +47,7 @@ for line in csvFile:
     plot = row[7]
 
     writer.add_document(
+                        id = (releaseYear + " " + title),
                         title = title,
                         releaseYear = releaseYear,
                         rating = rating,

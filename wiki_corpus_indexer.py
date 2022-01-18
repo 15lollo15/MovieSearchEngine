@@ -10,8 +10,10 @@ from whoosh.support.charset import default_charset, charset_table_to_dict
 charmap = charset_table_to_dict(default_charset)
 my_analyzer = StemmingAnalyzer() | CharsetFilter(charmap)
 
-schema = Schema(releaseYear = ID(stored = True),
-                title  = ID(stored = True),
+schema = Schema(
+                id = ID(stored = True),
+                releaseYear = NUMERIC(stored = True),
+                title  = TEXT(stored = True, analyzer = my_analyzer),
                 origin = STORED,
                 director = TEXT(stored = True),
                 cast = TEXT(stored = True),
@@ -32,6 +34,8 @@ line_count = 0
 print("Inizio analisi")
 for row in csv_reader:
     releaseYear = row[0]
+    if int(releaseYear) < 1990 or int(releaseYear) > 2003:
+        continue
     title = row[1]
     origin = row[2]
     director = row[3]
@@ -39,7 +43,9 @@ for row in csv_reader:
     genre = row[5]
     wikiPage = row[6]
     plot = row[7]
-    writer.add_document(releaseYear = releaseYear, 
+    writer.add_document(
+                        id = (releaseYear + " " + title),
+                        releaseYear = releaseYear, 
                         title = title, 
                         origin = origin,
                         director = director,
