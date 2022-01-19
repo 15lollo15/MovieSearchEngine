@@ -1,15 +1,20 @@
 from __future__ import print_function
+import imp
 from re import I
 from unittest import result
 from whoosh.index import open_dir
 from whoosh.fields import *
 from whoosh.qparser import QueryParser
+from whoosh.qparser import MultifieldParser
 import os, os.path
+import re
+from query_evaluator import setQueryParser
 
 IMDB_INDEX = "imdb_index"
 ROTTEN_INDEX = "rotten_index"
 WIKI_INDEX = "wiki_index"
 
+# TODO: Da spostare
 def sortDict(dict):
     sorted_values = sorted(dict.values(), reverse=True) # Sort the values
     sorted_dict = {}
@@ -22,14 +27,26 @@ def sortDict(dict):
     
     return sorted_dict
 
-def searchIn(corpusDir, query, limit=10):
+def searchIn(corpusDir, queryS, limit=10):
+    matchAll = re.search(r"\sALL", str(queryS))
+    matchTop = re.search(r"TOP:\d*", str(queryS))
+    if matchAll != None:
+        limit = None
+        queryS = queryS[:-3]
+        print(queryS)
+    elif matchTop != None:
+        print(matchTop)
+    
     ix = open_dir(corpusDir)
     searcher = ix.searcher()
-    parser = QueryParser("plot", schema=ix.schema)
-    query = parser.parse(query)
+
+    parser = MultifieldParser(["title", "plot"], schema=ix.schema)
+    setQueryParser(parser)
+    query = parser.parse(queryS)
     results = searcher.search(query, limit=limit)
     return results
 
+# TODO: Riscrivere meglio
 def thresholdMerge(results1, results2, k_max = 10):
     scores = {}
     len1 = len(results1)
@@ -85,32 +102,7 @@ def thresholdMerge(results1, results2, k_max = 10):
     return scores
         
 
-
-def mergeResults(results1, results2, k_max=10):
-    scores = {}
-    len1 = len(results1);
-    len2 = len(results2);
-    k = max(len1, len2)
-    k = min(k_max, k)
-    print(k)
-    keys1 = list(results1)
-    keys2 = list(results2)
-    index1 = 0
-    index2 = 0
-    for k in results1:
-        v2 = results2.get(k, -1)
-        if(v2 == -1):
-            scores[k] = results1[k]
-        else:
-            scores[k] = results1[k] + v2
-
-    for k in results2:
-        v = scores.get(k, -1)
-        if(v == -1):
-            scores[k] = results2[k]
-    return scores
-
-
+# TODO: Da spostare
 def toDictionary(results):
     dict = {}
     for x in results:
@@ -124,17 +116,17 @@ def toDictionary(results):
 
 
 print("Imdb results")
-resultsImdb = searchIn(IMDB_INDEX,b"freddy krueger")
+resultsImdb = searchIn(IMDB_INDEX,b"score:8")
 imdb_dict = toDictionary(resultsImdb)
 print(imdb_dict)
 
 print("\nrotten results")
-resultsRotten = searchIn(ROTTEN_INDEX,b"freddy krueger")
+resultsRotten = searchIn(ROTTEN_INDEX,b"genres:horror TOP:20")
 rotten_dict = toDictionary(resultsRotten)
 print(rotten_dict)
 
 print("\nwiki results")
-resultsWiki = searchIn(WIKI_INDEX,b"freddy krueger")
+resultsWiki = searchIn(WIKI_INDEX,b"scream", 5)
 wiki_dict = toDictionary(resultsWiki)
 print(wiki_dict)
 

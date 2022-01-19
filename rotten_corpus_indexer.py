@@ -17,10 +17,10 @@ schema = Schema(id = ID(stored=True),
                 tomatometerScore = NUMERIC(stored = True),
                 rating = TEXT(stored = True),
                 plot = TEXT(analyzer = my_analyzer),
-                genres = KEYWORD(stored = True, commas = True),
-                directors = KEYWORD(stored = True, commas = True),
+                genres = KEYWORD(stored = True, commas = True, scorable=True, lowercase=True),
+                directors = KEYWORD(stored = True, commas = True, scorable=True, lowercase=True),
                 releaseYear = NUMERIC(stored = True),
-                cast = KEYWORD(stored = True, commas=True)
+                cast = TEXT(stored = True)
                 )
 
 if not os.path.exists("rotten_index"):
