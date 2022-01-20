@@ -16,11 +16,12 @@ schema = Schema(
                 title = TEXT(analyzer = my_analyzer, stored = True),
                 releaseYear = NUMERIC(stored= True),
                 rating = TEXT(stored = True),
-                genres = KEYWORD(stored = True, commas = True),
+                genres = KEYWORD(stored = True, commas = True, scorable=True, lowercase=True),
                 score = NUMERIC(stored = True, numtype=float),
-                directors = KEYWORD(stored = True, commas = True),
-                cast = KEYWORD(stored = True, commas = True),
-                plot = TEXT(analyzer = my_analyzer)
+                directors = TEXT(stored = True),
+                cast = TEXT(stored = True),
+                plot = TEXT(analyzer = my_analyzer),
+                src = STORED
                 )
 
 if not os.path.exists("imdb_index"):
@@ -45,6 +46,7 @@ for line in csvFile:
     directors = row[5]
     cast = row[6]
     plot = row[7]
+    src = row[8]
 
     writer.add_document(
                         id = (releaseYear + " " + title),
@@ -55,7 +57,8 @@ for line in csvFile:
                         score = score,
                         directors = directors,
                         cast = cast,
-                        plot = plot
+                        plot = plot,
+                        src = src
                         )
     line_count += 1
 print("Fine analisi")

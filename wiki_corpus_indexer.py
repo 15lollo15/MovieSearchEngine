@@ -15,10 +15,10 @@ schema = Schema(
                 releaseYear = NUMERIC(stored = True),
                 title  = TEXT(stored = True, analyzer = my_analyzer),
                 origin = STORED,
-                director = TEXT(stored = True),
+                directors = TEXT(stored = True),
                 cast = TEXT(stored = True),
-                genre = TEXT(stored = True),
-                wikiPage = STORED,
+                genres = KEYWORD(stored = True, commas=True, scorable=True, lowercase=True),
+                src = STORED,
                 plot = TEXT(analyzer = my_analyzer)
                 )
 
@@ -41,7 +41,7 @@ for row in csv_reader:
     director = row[3]
     cast = row[4]
     genre = row[5]
-    wikiPage = row[6]
+    src = row[6]
     plot = row[7]
     writer.add_document(
                         id = (releaseYear + " " + title),
@@ -51,7 +51,7 @@ for row in csv_reader:
                         director = director,
                         cast = cast,
                         genre = genre,
-                        wikiPage = wikiPage,
+                        src = src,
                         plot = plot)
     line_count += 1
 print("Fine analisi")

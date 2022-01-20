@@ -18,9 +18,10 @@ schema = Schema(id = ID(stored=True),
                 rating = TEXT(stored = True),
                 plot = TEXT(analyzer = my_analyzer),
                 genres = KEYWORD(stored = True, commas = True, scorable=True, lowercase=True),
-                directors = KEYWORD(stored = True, commas = True, scorable=True, lowercase=True),
+                directors = TEXT(stored = True),
                 releaseYear = NUMERIC(stored = True),
-                cast = TEXT(stored = True)
+                cast = TEXT(stored = True),
+                src = STORED
                 )
 
 if not os.path.exists("rotten_index"):
@@ -50,6 +51,8 @@ for line in csvFile:
     directors = row[6]
     releaseYear = row[7]
     cast = row[8]
+    src = row[9]
+
     print(audienceScore, tomatometerScore, releaseYear)
     writer.add_document(
                         id = (releaseYear + " " + title),
@@ -61,7 +64,8 @@ for line in csvFile:
                         genres = genres,
                         directors = directors,
                         releaseYear = releaseYear,
-                        cast = cast
+                        cast = cast,
+                        src = src
                         )
     line_count += 1
 print("Fine analisi")

@@ -1,6 +1,8 @@
 from __future__ import print_function
-import imp
+import importlib
 from re import I
+from tkinter.messagebox import QUESTION
+from turtle import title
 from unittest import result
 from whoosh.index import open_dir
 from whoosh.fields import *
@@ -27,16 +29,50 @@ def sortDict(dict):
     
     return sorted_dict
 
-def searchIn(corpusDir, queryS, limit=10):
+def getUserLimit(queryS):
+    limit = -1
     matchAll = re.search(r"\sALL", str(queryS))
-    matchTop = re.search(r"TOP:\d*", str(queryS))
+    matchTop = re.search(r"TOP:\d+", str(queryS))
     if matchAll != None:
         limit = None
         queryS = queryS[:-3]
-        print(queryS)
     elif matchTop != None:
-        print(matchTop)
-    
+        numtop = int(matchTop.group().split(':')[1])
+        limit = numtop
+        queryS = queryS[:-len(matchTop.group())]
+    return queryS, limit
+
+def removeNumberField(queryS, fieldName):
+    regex = r"(\s|\b)" + fr"{fieldName}" + r":(((>|<)?=?)|\[)\S*\]?"
+    match = re.search(regex, queryS)
+    if match != None:
+        queryS = queryS.replace(match.group(), "")
+    return queryS
+
+def queryCleaner(corpusDir, queryS):
+    queryS = str(queryS)
+    if corpusDir == WIKI_INDEX or corpusDir == IMDB_INDEX:
+        queryS = removeNumberField(queryS, "raud")
+        queryS = removeNumberField(queryS, "audienceScore")
+        queryS = removeNumberField(queryS, "tomatometerScore")
+        queryS = removeNumberField(queryS, "rcrt")
+    if corpusDir == WIKI_INDEX or corpusDir == ROTTEN_INDEX:
+        queryS = removeNumberField(queryS, "score")
+        queryS = removeNumberField(queryS, "imdb")
+    queryS = queryS.replace("raud:", "audienceScore:")
+    queryS = queryS.replace("rcrt:", "tomatometerScore:")
+    queryS = queryS.replace("imdb:", "score:")
+    match = re.search(r"(\s|\b)year:", queryS)
+    if match != None:
+        queryS = queryS.replace("year:", "releaseYear:")
+    return queryS
+
+def searchIn(corpusDir, queryS, limit=10):
+    queryS, tmp = getUserLimit(queryS)
+    queryS = queryCleaner(corpusDir, queryS)
+    #print(queryS)
+    if(tmp != -1):
+        limit = tmp
     ix = open_dir(corpusDir)
     searcher = ix.searcher()
 
@@ -113,20 +149,61 @@ def toDictionary(results):
         dict[key] = score
     return dict
 
+def extractField(movie, fieldName):
+    field = ""
+    if(movie != None):
+        field = movie.fields().get(fieldName, "")
+    return field
 
+def selectField(movies, fieldname):
+    candidateField = []
+    for m in movies:
+        if m != None:
+            candidateField.append(extractField(m, fieldname))
+    for f in candidateField:
+        if f != "":
+            return f
+    return ""
+
+
+def getMovie(id):
+    movie = {}
+    resultsImdb = list(searchIn(IMDB_INDEX, "id:\""+id+"\""))
+    imdbMovie = None
+    if len(resultsImdb) > 0:
+        imdbMovie = resultsImdb[0]
+    resultsRotten = list(searchIn(ROTTEN_INDEX, "id:\""+id+"\""))
+    rottenMovie = None
+    if len(resultsRotten) > 0:
+        rottenMovie = resultsRotten[0]
+    resultsWiki = list(searchIn(WIKI_INDEX, "id:\""+id+"\""))
+    wikiMovie = None
+    if len(resultsWiki) > 0:
+        wikiMovie = resultsWiki[0]
+    if imdbMovie == None and rottenMovie == None and wikiMovie == None:
+        return None
+    
+    movie["title"] = selectField([imdbMovie, rottenMovie, wikiMovie], "title")
+    movie["releaseYear"] = selectField([imdbMovie, rottenMovie, wikiMovie], "releaseYear")
+    movie["origin"] = selectField([imdbMovie, rottenMovie, wikiMovie], "origin")
+
+    return movie
+
+movie = getMovie("2001 Cats & Dogs")
+print(movie)
 
 print("Imdb results")
-resultsImdb = searchIn(IMDB_INDEX,b"score:8")
+resultsImdb = searchIn(IMDB_INDEX,b"imdb:8 year:2000")
 imdb_dict = toDictionary(resultsImdb)
 print(imdb_dict)
 
 print("\nrotten results")
-resultsRotten = searchIn(ROTTEN_INDEX,b"genres:horror TOP:20")
+resultsRotten = searchIn(ROTTEN_INDEX,b"raud:[95 to 100] TOP:3")
 rotten_dict = toDictionary(resultsRotten)
 print(rotten_dict)
 
 print("\nwiki results")
-resultsWiki = searchIn(WIKI_INDEX,b"scream", 5)
+resultsWiki = searchIn(WIKI_INDEX,b"imdb:80.5 dog", 5)
 wiki_dict = toDictionary(resultsWiki)
 print(wiki_dict)
 
