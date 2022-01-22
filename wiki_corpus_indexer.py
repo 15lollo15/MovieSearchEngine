@@ -19,7 +19,8 @@ schema = Schema(
                 cast = TEXT(stored = True),
                 genres = KEYWORD(stored = True, commas=True, scorable=True, lowercase=True),
                 src = STORED,
-                plot = TEXT(analyzer = my_analyzer)
+                plot = TEXT(analyzer = my_analyzer),
+                corpusIndex = STORED
                 )
 
 if not os.path.exists("wiki_index"):
@@ -35,24 +36,27 @@ print("Inizio analisi")
 for row in csv_reader:
     releaseYear = row[0]
     if int(releaseYear) < 1990 or int(releaseYear) > 2003:
+        line_count += 1
         continue
     title = row[1]
     origin = row[2]
-    director = row[3]
+    directors = row[3]
     cast = row[4]
-    genre = row[5]
+    genres = row[5]
     src = row[6]
     plot = row[7]
+    corpusIndex = str(line_count)
     writer.add_document(
                         id = (releaseYear + " " + title),
                         releaseYear = releaseYear, 
                         title = title, 
                         origin = origin,
-                        director = director,
+                        directors = directors,
                         cast = cast,
-                        genre = genre,
+                        genres = genres,
                         src = src,
-                        plot = plot)
+                        plot = plot,
+                        corpusIndex = corpusIndex)
     line_count += 1
 print("Fine analisi")
 print("Inizio commit")

@@ -21,7 +21,8 @@ schema = Schema(id = ID(stored=True),
                 directors = TEXT(stored = True),
                 releaseYear = NUMERIC(stored = True),
                 cast = TEXT(stored = True),
-                src = STORED
+                src = STORED,
+                corpusIndex = STORED
                 )
 
 if not os.path.exists("rotten_index"):
@@ -51,7 +52,9 @@ for line in csvFile:
     directors = row[6]
     releaseYear = row[7]
     cast = row[8]
-    src = row[9]
+    src = row[9].replace("\n", "")
+    print(src)
+    corpusIndex = line_count
 
     print(audienceScore, tomatometerScore, releaseYear)
     writer.add_document(
@@ -65,7 +68,8 @@ for line in csvFile:
                         directors = directors,
                         releaseYear = releaseYear,
                         cast = cast,
-                        src = src
+                        src = src,
+                        corpusIndex = corpusIndex
                         )
     line_count += 1
 print("Fine analisi")

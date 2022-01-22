@@ -11,6 +11,7 @@ from whoosh.qparser import MultifieldParser
 import os, os.path
 import re
 from query_evaluator import setQueryParser
+from movie import Movie
 
 IMDB_INDEX = "imdb_index"
 ROTTEN_INDEX = "rotten_index"
@@ -167,43 +168,49 @@ def selectField(movies, fieldname):
 
 
 def getMovie(id):
-    movie = {}
     resultsImdb = list(searchIn(IMDB_INDEX, "id:\""+id+"\""))
-    imdbMovie = None
+    rImdb = None
     if len(resultsImdb) > 0:
-        imdbMovie = resultsImdb[0]
+        rImdb = resultsImdb[0]
+    imdbMovie = Movie.fromImdb(rImdb)
+    #print(imdbMovie)
+    
     resultsRotten = list(searchIn(ROTTEN_INDEX, "id:\""+id+"\""))
-    rottenMovie = None
+    rRotten = None
     if len(resultsRotten) > 0:
-        rottenMovie = resultsRotten[0]
+        rRotten = resultsRotten[0]
+    rottenMovie = Movie.fromRotten(rRotten)
+    #print("\n", rottenMovie)
+    
     resultsWiki = list(searchIn(WIKI_INDEX, "id:\""+id+"\""))
-    wikiMovie = None
+    rWiki = None
     if len(resultsWiki) > 0:
-        wikiMovie = resultsWiki[0]
+        rWiki = resultsWiki[0]
+    wikiMovie = Movie.fromWiki(rWiki)
+    #print("\n",wikiMovie)
+
     if imdbMovie == None and rottenMovie == None and wikiMovie == None:
         return None
     
-    movie["title"] = selectField([imdbMovie, rottenMovie, wikiMovie], "title")
-    movie["releaseYear"] = selectField([imdbMovie, rottenMovie, wikiMovie], "releaseYear")
-    movie["origin"] = selectField([imdbMovie, rottenMovie, wikiMovie], "origin")
+    mergedMovie = Movie.mergeMovies(Movie.mergeMovies(imdbMovie, rottenMovie), wikiMovie)
+    print(mergedMovie)
+    
 
-    return movie
+getMovie("1992 Batman Returns")
 
-movie = getMovie("2001 Cats & Dogs")
-print(movie)
 
 print("Imdb results")
-resultsImdb = searchIn(IMDB_INDEX,b"imdb:8 year:2000")
+resultsImdb = searchIn(IMDB_INDEX,b"batman")
 imdb_dict = toDictionary(resultsImdb)
 print(imdb_dict)
 
 print("\nrotten results")
-resultsRotten = searchIn(ROTTEN_INDEX,b"raud:[95 to 100] TOP:3")
+resultsRotten = searchIn(ROTTEN_INDEX,b"batman")
 rotten_dict = toDictionary(resultsRotten)
 print(rotten_dict)
 
 print("\nwiki results")
-resultsWiki = searchIn(WIKI_INDEX,b"imdb:80.5 dog", 5)
+resultsWiki = searchIn(WIKI_INDEX,b"batman", 5)
 wiki_dict = toDictionary(resultsWiki)
 print(wiki_dict)
 

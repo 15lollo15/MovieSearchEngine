@@ -21,7 +21,8 @@ schema = Schema(
                 directors = TEXT(stored = True),
                 cast = TEXT(stored = True),
                 plot = TEXT(analyzer = my_analyzer),
-                src = STORED
+                src = STORED,
+                corpusIndex = STORED
                 )
 
 if not os.path.exists("imdb_index"):
@@ -47,6 +48,7 @@ for line in csvFile:
     cast = row[6]
     plot = row[7]
     src = row[8]
+    corpusIndex = line_count
 
     writer.add_document(
                         id = (releaseYear + " " + title),
@@ -58,7 +60,8 @@ for line in csvFile:
                         directors = directors,
                         cast = cast,
                         plot = plot,
-                        src = src
+                        src = src,
+                        corpusIndex = corpusIndex
                         )
     line_count += 1
 print("Fine analisi")
