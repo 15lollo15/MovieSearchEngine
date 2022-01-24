@@ -8,6 +8,7 @@ from whoosh.index import open_dir
 from whoosh.fields import *
 from whoosh.qparser import QueryParser
 from whoosh.qparser import MultifieldParser
+from whoosh import scoring
 import os, os.path
 import re
 from query_evaluator import setQueryParser
@@ -29,6 +30,16 @@ def sortDict(dict):
                 break
     
     return sorted_dict
+
+def getUserSort(queryS):
+    sortedBy = None
+    matchSortedBy = re.search(r"\sSORT_BY:\S*", str(queryS))
+    if(matchSortedBy != None):
+        sortedBy = matchSortedBy.group().split(":")[1]
+        queryS = queryS[:-len(matchSortedBy.group())]
+        print("Q:", queryS)
+    
+    return queryS, sortedBy
 
 def getUserLimit(queryS):
     limit = -1
@@ -69,19 +80,24 @@ def queryCleaner(corpusDir, queryS):
     return queryS
 
 def searchIn(corpusDir, queryS, limit=10):
+    #print(queryS)
+    queryS, sort = getUserSort(queryS)
     queryS, tmp = getUserLimit(queryS)
     queryS = queryCleaner(corpusDir, queryS)
-    #print(queryS)
+
     if(tmp != -1):
         limit = tmp
     ix = open_dir(corpusDir)
-    searcher = ix.searcher()
+    searcher = ix.searcher(weighting=scoring.TF_IDF())
 
     parser = MultifieldParser(["title", "plot"], schema=ix.schema)
     setQueryParser(parser)
     query = parser.parse(queryS)
-    results = searcher.search(query, limit=limit)
-    return results
+    print(query)
+    #print(limit)
+    results = searcher.search(query, limit=limit, sortedby=sort)
+    #print(results)
+    return results, limit
 
 # TODO: Riscrivere meglio
 def thresholdMerge(results1, results2, k_max = 10):
@@ -92,6 +108,7 @@ def thresholdMerge(results1, results2, k_max = 10):
     k = min(k, k_max)
     keys1 = list(results1)
     keys2 = list(results2)
+    print(results1)
     index = 0
     T = 1000
     for index in range(k):
@@ -142,6 +159,7 @@ def thresholdMerge(results1, results2, k_max = 10):
 # TODO: Da spostare
 def toDictionary(results):
     dict = {}
+    #print(results)
     for x in results:
         title = x.fields()["title"]
         releaseYear = x.fields()["releaseYear"]
@@ -168,21 +186,21 @@ def selectField(movies, fieldname):
 
 
 def getMovie(id):
-    resultsImdb = list(searchIn(IMDB_INDEX, "id:\""+id+"\""))
+    resultsImdb  = list(searchIn(IMDB_INDEX, "id:\""+id+"\"")[0])
     rImdb = None
     if len(resultsImdb) > 0:
         rImdb = resultsImdb[0]
     imdbMovie = Movie.fromImdb(rImdb)
     #print(imdbMovie)
     
-    resultsRotten = list(searchIn(ROTTEN_INDEX, "id:\""+id+"\""))
+    resultsRotten = list(searchIn(ROTTEN_INDEX, "id:\""+id+"\"")[0])
     rRotten = None
     if len(resultsRotten) > 0:
         rRotten = resultsRotten[0]
     rottenMovie = Movie.fromRotten(rRotten)
     #print("\n", rottenMovie)
     
-    resultsWiki = list(searchIn(WIKI_INDEX, "id:\""+id+"\""))
+    resultsWiki = list(searchIn(WIKI_INDEX, "id:\""+id+"\"")[0])
     rWiki = None
     if len(resultsWiki) > 0:
         rWiki = resultsWiki[0]
@@ -193,31 +211,19 @@ def getMovie(id):
         return None
     
     mergedMovie = Movie.mergeMovies(Movie.mergeMovies(imdbMovie, rottenMovie), wikiMovie)
-    print(mergedMovie)
+    return mergedMovie
     
+def search(query):
+    resultsImdb, len = searchIn(IMDB_INDEX, query)
+    imdb_dict = toDictionary(resultsImdb)
+    resultsRotten, len = searchIn(ROTTEN_INDEX, query)
+    rotten_dict = toDictionary(resultsRotten)
+    resultsWiki, len = searchIn(WIKI_INDEX, query)
+    wiki_dict = toDictionary(resultsWiki)
+    scores = thresholdMerge(imdb_dict, wiki_dict, len)
+    scores = thresholdMerge(scores, rotten_dict, len)
+    return scores
 
-getMovie("1992 Batman Returns")
-
-
-print("Imdb results")
-resultsImdb = searchIn(IMDB_INDEX,b"batman")
-imdb_dict = toDictionary(resultsImdb)
-print(imdb_dict)
-
-print("\nrotten results")
-resultsRotten = searchIn(ROTTEN_INDEX,b"batman")
-rotten_dict = toDictionary(resultsRotten)
-print(rotten_dict)
-
-print("\nwiki results")
-resultsWiki = searchIn(WIKI_INDEX,b"batman", 5)
-wiki_dict = toDictionary(resultsWiki)
-print(wiki_dict)
-
-print("\n Merged")
-scores = thresholdMerge(imdb_dict, wiki_dict, 10)
-scores = thresholdMerge(scores, rotten_dict, 10)
-print(scores)
 
 '''
 ix = open_dir("imdb_index")

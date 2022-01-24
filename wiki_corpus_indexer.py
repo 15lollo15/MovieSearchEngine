@@ -12,8 +12,8 @@ my_analyzer = StemmingAnalyzer() | CharsetFilter(charmap)
 
 schema = Schema(
                 id = ID(stored = True),
-                releaseYear = NUMERIC(stored = True),
-                title  = TEXT(stored = True, analyzer = my_analyzer),
+                releaseYear = NUMERIC(stored = True, sortable=True),
+                title  = TEXT(stored = True, analyzer = my_analyzer, sortable=True),
                 origin = STORED,
                 directors = TEXT(stored = True),
                 cast = TEXT(stored = True),

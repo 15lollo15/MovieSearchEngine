@@ -12,14 +12,14 @@ charmap = charset_table_to_dict(default_charset)
 my_analyzer = StemmingAnalyzer() | CharsetFilter(charmap)
 
 schema = Schema(id = ID(stored=True),
-                title = TEXT(analyzer = my_analyzer, stored = True),
-                audienceScore = NUMERIC(stored = True),
-                tomatometerScore = NUMERIC(stored = True),
+                title = TEXT(analyzer = my_analyzer, stored = True, sortable=True),
+                audienceScore = NUMERIC(stored = True, sortable=True),
+                tomatometerScore = NUMERIC(stored = True, sortable=True),
                 rating = TEXT(stored = True),
                 plot = TEXT(analyzer = my_analyzer),
                 genres = KEYWORD(stored = True, commas = True, scorable=True, lowercase=True),
                 directors = TEXT(stored = True),
-                releaseYear = NUMERIC(stored = True),
+                releaseYear = NUMERIC(stored = True, sortable=True),
                 cast = TEXT(stored = True),
                 src = STORED,
                 corpusIndex = STORED
@@ -35,8 +35,8 @@ csvFile = open("corpus/rotten_corpus_clean.csv", mode="r", encoding="utf-8")
 line_count = 0
 print("Inizio analisi")
 for line in csvFile:
-    if line_count >= 1000:
-        break;
+    #if line_count >= 1000:
+        #break
     print(line_count)
     row = line.split(";;")
     title = row[0]

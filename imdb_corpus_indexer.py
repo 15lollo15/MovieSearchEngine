@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from cgi import print_directory
-from turtle import title
 from whoosh.index import create_in
 from whoosh.fields import *
 import os, os.path
@@ -13,11 +11,11 @@ my_analyzer = StemmingAnalyzer() | CharsetFilter(charmap)
 
 schema = Schema(
                 id = ID(stored = True),
-                title = TEXT(analyzer = my_analyzer, stored = True),
-                releaseYear = NUMERIC(stored= True),
+                title = TEXT(analyzer = my_analyzer, stored = True, sortable=True),
+                releaseYear = NUMERIC(stored= True, sortable=True),
                 rating = TEXT(stored = True),
                 genres = KEYWORD(stored = True, commas = True, scorable=True, lowercase=True),
-                score = NUMERIC(stored = True, numtype=float),
+                score = NUMERIC(stored = True, numtype=int, sortable=True),
                 directors = TEXT(stored = True),
                 cast = TEXT(stored = True),
                 plot = TEXT(analyzer = my_analyzer),
@@ -35,21 +33,20 @@ csvFile = open("corpus/imdb_corpus_clean.csv", mode="r", encoding="utf-8")
 line_count = 0
 print("Inizio analisi")
 for line in csvFile:
-    if line_count >= 1000:
-        break;
+    #if line_count >= 1000:
+        #break;
     print(line_count)
     row = line.split(";;")
     title = row[0]
     releaseYear = row[1]
     rating = row[2]
     genres = row[3]
-    score = row[4]
+    score = str(round(float(row[4])))
     directors = row[5]
     cast = row[6]
     plot = row[7]
     src = row[8]
-    corpusIndex = line_count
-
+    corpusIndex = str(line_count)
     writer.add_document(
                         id = (releaseYear + " " + title),
                         title = title,

@@ -144,6 +144,7 @@ class Movie:
     def fromImdb(imdbResult):
         if imdbResult == None:
             return Movie()
+        #print(imdbResult)
         imdbFields = imdbResult.fields()
         title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(imdbFields, 
                                                                                             "corpus/imdb_corpus_clean.csv",
