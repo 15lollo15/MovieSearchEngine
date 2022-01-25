@@ -30,6 +30,13 @@ class Movie:
         self.plot = plot
         self.srcs = srcs
 
+    def __eq__(self, __o: object):
+        movie2 = Movie(__o)
+        return self.__hash__() and movie2.__hash__()
+
+    def __hash__(self):
+        return hash((self.releaseYear, self.title))
+
     def __str__(self):
         str = ""
         str += self.title + "\n"
@@ -97,7 +104,7 @@ class Movie:
         srcString = fields.get("src", "")
         srcs = [srcString]
 
-        plot = Movie.extractPlot(fields, fileName, separator, plotFieldId)
+        plot = "" # Movie.extractPlot(fields, fileName, separator, plotFieldId)
 
         return title, releaseYear, directors, cast, genres, srcs, plot
 

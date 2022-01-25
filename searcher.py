@@ -1,16 +1,9 @@
 from __future__ import print_function
-import importlib
-from re import I
-from tkinter.messagebox import QUESTION
-from turtle import title
-from unittest import result
 from whoosh.index import open_dir
 from whoosh.fields import *
-from whoosh.qparser import QueryParser
 from whoosh.qparser import MultifieldParser
 from whoosh import scoring
-import os, os.path
-import re
+from query import MyQuery
 from query_evaluator import setQueryParser
 from movie import Movie
 
@@ -31,73 +24,16 @@ def sortDict(dict):
     
     return sorted_dict
 
-def getUserSort(queryS):
-    sortedBy = None
-    matchSortedBy = re.search(r"\sSORT_BY:\S*", str(queryS))
-    if(matchSortedBy != None):
-        sortedBy = matchSortedBy.group().split(":")[1]
-        queryS = queryS[:-len(matchSortedBy.group())]
-        print("Q:", queryS)
-    
-    return queryS, sortedBy
 
-def getUserLimit(queryS):
-    limit = -1
-    matchAll = re.search(r"\sALL", str(queryS))
-    matchTop = re.search(r"TOP:\d+", str(queryS))
-    if matchAll != None:
-        limit = None
-        queryS = queryS[:-3]
-    elif matchTop != None:
-        numtop = int(matchTop.group().split(':')[1])
-        limit = numtop
-        queryS = queryS[:-len(matchTop.group())]
-    return queryS, limit
 
-def removeNumberField(queryS, fieldName):
-    regex = r"(\s|\b)" + fr"{fieldName}" + r":(((>|<)?=?)|\[)\S*\]?"
-    match = re.search(regex, queryS)
-    if match != None:
-        queryS = queryS.replace(match.group(), "")
-    return queryS
-
-def queryCleaner(corpusDir, queryS):
-    queryS = str(queryS)
-    if corpusDir == WIKI_INDEX or corpusDir == IMDB_INDEX:
-        queryS = removeNumberField(queryS, "raud")
-        queryS = removeNumberField(queryS, "audienceScore")
-        queryS = removeNumberField(queryS, "tomatometerScore")
-        queryS = removeNumberField(queryS, "rcrt")
-    if corpusDir == WIKI_INDEX or corpusDir == ROTTEN_INDEX:
-        queryS = removeNumberField(queryS, "score")
-        queryS = removeNumberField(queryS, "imdb")
-    queryS = queryS.replace("raud:", "audienceScore:")
-    queryS = queryS.replace("rcrt:", "tomatometerScore:")
-    queryS = queryS.replace("imdb:", "score:")
-    match = re.search(r"(\s|\b)year:", queryS)
-    if match != None:
-        queryS = queryS.replace("year:", "releaseYear:")
-    return queryS
-
-def searchIn(corpusDir, queryS, limit=10):
-    #print(queryS)
-    queryS, sort = getUserSort(queryS)
-    queryS, tmp = getUserLimit(queryS)
-    queryS = queryCleaner(corpusDir, queryS)
-
-    if(tmp != -1):
-        limit = tmp
+def searchIn(corpusDir, query, limit=10, sort=None):
     ix = open_dir(corpusDir)
     searcher = ix.searcher(weighting=scoring.TF_IDF())
-
     parser = MultifieldParser(["title", "plot"], schema=ix.schema)
     setQueryParser(parser)
-    query = parser.parse(queryS)
-    print(query)
-    #print(limit)
+    query = parser.parse(query)
     results = searcher.search(query, limit=limit, sortedby=sort)
-    #print(results)
-    return results, limit
+    return results
 
 # TODO: Riscrivere meglio
 def thresholdMerge(results1, results2, k_max = 10):
@@ -108,9 +44,8 @@ def thresholdMerge(results1, results2, k_max = 10):
     k = min(k, k_max)
     keys1 = list(results1)
     keys2 = list(results2)
-    print(results1)
+    #print(results1)
     index = 0
-    T = 1000
     for index in range(k):
         T = 0
         if index < len1 :
@@ -128,7 +63,7 @@ def thresholdMerge(results1, results2, k_max = 10):
             score1 = results1.get(key, 0)
             if scores.get(key, -1) == -1:
                 scores[key] = score1 + score2
-        #print("A", scores)
+
         t1 = 0
         if index+1 < len1:
             t1 = results1.get(keys1[index+1], 0)
@@ -157,15 +92,12 @@ def thresholdMerge(results1, results2, k_max = 10):
         
 
 # TODO: Da spostare
-def toDictionary(results):
+def toDictionary(results, fun):
     dict = {}
     #print(results)
     for x in results:
-        title = x.fields()["title"]
-        releaseYear = x.fields()["releaseYear"]
-        score = x.score
-        key = releaseYear + " " + title
-        dict[key] = score
+        movie = fun(x)
+        dict[movie] = x.score
     return dict
 
 def extractField(movie, fieldName):
@@ -213,17 +145,39 @@ def getMovie(id):
     mergedMovie = Movie.mergeMovies(Movie.mergeMovies(imdbMovie, rottenMovie), wikiMovie)
     return mergedMovie
     
-def search(query):
-    resultsImdb, len = searchIn(IMDB_INDEX, query)
-    imdb_dict = toDictionary(resultsImdb)
-    resultsRotten, len = searchIn(ROTTEN_INDEX, query)
-    rotten_dict = toDictionary(resultsRotten)
-    resultsWiki, len = searchIn(WIKI_INDEX, query)
-    wiki_dict = toDictionary(resultsWiki)
-    scores = thresholdMerge(imdb_dict, wiki_dict, len)
-    scores = thresholdMerge(scores, rotten_dict, len)
+def search(rQuery):
+    query = MyQuery(rQuery)
+    resultsImdb = searchIn(IMDB_INDEX, query.getImdbQuery(), query.limit, query.sortedBy)
+    moviesImdb = toDictionary(resultsImdb, Movie.fromImdb)
+    print("IMDB:")
+    for k in moviesImdb.keys():
+        print(k.title, moviesImdb[k])
+
+    resultsRotten = searchIn(ROTTEN_INDEX, query.getRottenQuery(), query.limit, query.sortedBy)
+    moviesRotten = toDictionary(resultsRotten, Movie.fromRotten)
+    print("\nROTTEN:")
+    for k in moviesRotten.keys():
+        print(k.title, moviesRotten[k])
+
+    resultsWiki = searchIn(WIKI_INDEX, query.getWikiQuery(), query.limit, query.sortedBy)
+    moviesWiki = toDictionary(resultsWiki, Movie.fromWiki)
+    print("\nWIKI:")
+    for k in moviesWiki.keys():
+        print(k.title, moviesWiki[k])
+
+
+    if(query.sortedBy != None):
+        pass
+    else:
+        scores = thresholdMerge(moviesImdb, moviesWiki, query.limit)
+        scores = thresholdMerge(scores, moviesRotten, query.limit)
     return scores
 
+
+scores = search("spider-man")
+print("\n")
+for k in scores.keys():
+    print(k.title, scores[k])
 
 '''
 ix = open_dir("imdb_index")

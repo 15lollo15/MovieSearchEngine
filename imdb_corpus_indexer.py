@@ -23,10 +23,11 @@ schema = Schema(
                 corpusIndex = STORED
                 )
 
+# TODO: Può essere una funzione
 if not os.path.exists("imdb_index"):
     os.mkdir("imdb_index")
 ix = create_in("imdb_index", schema)
-
+# ------------------------------------
 writer = ix.writer()
 
 csvFile = open("corpus/imdb_corpus_clean.csv", mode="r", encoding="utf-8")
