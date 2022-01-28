@@ -1,5 +1,6 @@
 from searcher import search, getMovie
 import webbrowser
+import re
 
 # TODO: \n in IMDb
 
@@ -9,8 +10,8 @@ def viewResults(results):
         print("No results for your query")
         return
     lc = 1
-    for k in results.keys():
-        print("[" + str(lc) + "]\t" + k)
+    for k in results:
+        print("[" + str(lc) + "]\t" + k.title + "\t" + str(k.releaseYear))
         lc += 1
 
 def showInBrowser(movie):
@@ -18,7 +19,8 @@ def showInBrowser(movie):
     htmlFile.write("<html>")
     htmlFile.write("<head></head>")
     htmlFile.write("<body>")
-    htmlFile.write("<h1>" + movie.title + "</h1")
+    htmlFile.write("<h1>" + movie.title + "</h1>")
+    htmlFile.write("<p>" + re.sub("\. ", ".<br>", movie.plot) + "</p>")
     htmlFile.write("</body>")
     htmlFile.write("</html>")
     htmlFile.close()
@@ -32,7 +34,7 @@ if len(movies) > 0:
     index = input("Show result('n' none): ")
     if index != 'n':
         index = int(index)
-        movieID = list(movies.keys())[index-1]
-        movie = getMovie(movieID)
+        movie = movies[index-1]
+        movie = getMovie(str(movie.releaseYear) + " " + movie.title)
         showInBrowser(movie)
 

@@ -11,10 +11,10 @@ class MyQuery:
 
     def __init__(self, rQuery):
         self.query = rQuery.strip()
+        self.replaceShortcut()
         self.getUserLimit()
         self.getUserSort()
-        self.replaceShortcut()
-
+ 
     def getUserLimit(self):
         limit = MyQuery.DEFAULT_LIMIT
         matchAll = re.search(MyQuery.ALL_REGEX, str(self.query))
@@ -37,12 +37,12 @@ class MyQuery:
         self.sortedBy = sortedBy
 
     def replaceShortcut(self):
-        self.query = self.query.replace("raud:", "audienceScore:")
-        self.query = self.query.replace("rcrt:", "tomatometerScore:")
-        self.query = self.query.replace("imdb:", "score:")
-        match = re.search(r"(\s|\b)year:", self.query)
+        self.query = self.query.replace("raud", "audienceScore")
+        self.query = self.query.replace("rcrt", "tomatometerScore")
+        self.query = self.query.replace("imdb", "score")
+        match = re.search(r"(\s|\b)ryear", self.query)
         if match != None:
-            self.query = self.query.replace("year:", "releaseYear:")
+            self.query = self.query.replace("ryear", "releaseYear")
 
     def getImdbQuery(self):
         tmp = self.query
@@ -69,5 +69,17 @@ class MyQuery:
             queryS = queryS.replace(match.group(), "")
         return queryS
 
-query = MyQuery("raud:dog imdb:cat year:2020 bunny")
-print(query.limit)
+    def getSortedByImdb(self):
+        if self.sortedBy == None  or self.sortedBy=="audienceScore" or self.sortedBy=="tomatometerScore":
+            return None
+        return self.sortedBy
+    
+    def getSortedByRotten(self):
+        if self.sortedBy == None  or self.sortedBy=="score":
+            return None
+        return self.sortedBy
+
+    def getSortedByWiki(self):
+        if self.sortedBy == None  or self.sortedBy=="score" or self.sortedBy=="audienceScore" or self.sortedBy=="tomatometerScore":
+            return None
+        return self.sortedBy

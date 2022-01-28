@@ -1,6 +1,7 @@
 import csv
+from platform import release
 
-from black import diff
+from black import diff, re
 
 class Movie:
     def __init__(self, 
@@ -31,8 +32,11 @@ class Movie:
         self.srcs = srcs
 
     def __eq__(self, __o: object):
-        movie2 = Movie(__o)
-        return self.__hash__() and movie2.__hash__()
+        if not isinstance(__o, Movie):
+            return False
+        movie2 = __o
+        #print("Dentro __eq__", movie2.title)
+        return self.title == movie2.title and self.releaseYear == movie2.releaseYear
 
     def __hash__(self):
         return hash((self.releaseYear, self.title))
@@ -52,6 +56,8 @@ class Movie:
         str += self.plot + "\n"
         str += self.srcs.__str__() + "\n"
         return str
+
+
 
     def extractPlot(fields, fileName, separator, fieldId):
         corpusIndex = int(fields.get("corpusIndex", ""))
@@ -76,7 +82,7 @@ class Movie:
             lc += 1
         return plot
 
-    def extractCommonFields(fields, fileName, separator, plotFieldId):
+    def extractCommonFields(fields, fileName, separator, plotFieldId, withPlot=True):
         title = fields.get("title", "")
         releaseYear = fields.get("releaseYear", "")
 
@@ -104,11 +110,14 @@ class Movie:
         srcString = fields.get("src", "")
         srcs = [srcString]
 
-        plot = "" # Movie.extractPlot(fields, fileName, separator, plotFieldId)
+        if withPlot:
+            plot = Movie.extractPlot(fields, fileName, separator, plotFieldId)
+        else:
+            plot = ""
 
         return title, releaseYear, directors, cast, genres, srcs, plot
 
-    def fromWiki(wikiResult):
+    def fromWiki(wikiResult, withPlot=True):
         if wikiResult == None:
             return Movie()
         wikiFields = wikiResult.fields()
@@ -116,7 +125,7 @@ class Movie:
         title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(wikiFields, 
                                                                                             "corpus/wiki_corpus_reduced.csv",
                                                                                             ",",
-                                                                                            7)     
+                                                                                            7, withPlot)     
         return Movie(title = title, 
                     releaseYear = releaseYear, 
                     origin = origin, 
@@ -126,14 +135,14 @@ class Movie:
                     srcs = srcs,
                     plot = plot)
 
-    def fromRotten(rottenResult):
+    def fromRotten(rottenResult, withPlot=True):
         if rottenResult == None:
             return Movie()
         rottenFields = rottenResult.fields()
         title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(rottenFields, 
                                                                                             "corpus/rotten_corpus_clean.csv",
                                                                                             ";;",
-                                                                                            4)     
+                                                                                            4, withPlot)     
         raud = rottenFields.get("audienceScore", "")
         rcrt = rottenFields.get("tomatometerScore", "")
         rating = rottenFields.get("rating", "")
@@ -148,7 +157,7 @@ class Movie:
                     rcrt = rcrt,
                     rating = rating)
     
-    def fromImdb(imdbResult):
+    def fromImdb(imdbResult, withPlot=True):
         if imdbResult == None:
             return Movie()
         #print(imdbResult)
@@ -156,7 +165,7 @@ class Movie:
         title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(imdbFields, 
                                                                                             "corpus/imdb_corpus_clean.csv",
                                                                                             ";;",
-                                                                                            7)     
+                                                                                            7, withPlot)     
         imdb = imdbFields.get("score", "")
         rating = imdbFields.get("rating", "")
         return Movie(title = title, 
@@ -192,3 +201,16 @@ class Movie:
         plot = Movie.returnLonger(movie1.plot, movie2.plot)
         srcs = Movie.mergeList(movie1.srcs, movie2.srcs)
         return Movie(title, releaseYear, origin, rating, genres, imdb, raud, rcrt, directors, cast, plot, srcs)
+
+
+    def compareByReleaseYear(m1, m2):
+        return m1.releaseYear - m2.releaseYear
+
+    def compareByRaud(m1, m2):
+        return m1.raud - m2.raud
+    
+    def compareByRcrt(m1, m2):
+        return m1.rcrt - m2.rcrt
+
+    def compareByImdb(m1, m2):
+        return m1.imdb - m2.rcrt
