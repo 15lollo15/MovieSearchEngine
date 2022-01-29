@@ -28,6 +28,9 @@ class Movie:
         self.plot = plot
         self.srcs = srcs
 
+    def getId(self):
+        return self.releaseYear + " " + self.title
+
     def __eq__(self, __o: object):
         if not isinstance(__o, Movie):
             return False
