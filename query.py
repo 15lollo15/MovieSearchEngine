@@ -1,6 +1,4 @@
-from os import remove
 import re
-from unittest.mock import DEFAULT
 
 class MyQuery:
     ALL_REGEX = r"\sALL"

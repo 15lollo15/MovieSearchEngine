@@ -1,22 +1,19 @@
 import csv
-from platform import release
-
-from black import diff, re
 
 class Movie:
     def __init__(self, 
                 title = "", 
                 releaseYear = "",
                 origin = "",
-                rating = "", 
-                genres = [], 
+                rating = set(), 
+                genres = set(), 
                 imdb = "",
                 raud = "",
                 rcrt = "", 
-                directors = [],
-                cast = [],
+                directors = set(),
+                cast = set(),
                 plot = "",
-                srcs = []
+                srcs = set()
                 ):
         self.title = title
         self.releaseYear = releaseYear
@@ -82,33 +79,26 @@ class Movie:
             lc += 1
         return plot
 
+    def extractSet(fields, fieldName):
+        fieldString = fields.get(fieldName, "")
+        extractedSet = set()
+        if fieldString != "":
+            splitted = fieldString.split(",")
+            for i in range(len(splitted)):
+                extractedSet.add(splitted[i].strip())
+        return extractedSet
+
     def extractCommonFields(fields, fileName, separator, plotFieldId, withPlot=True):
         title = fields.get("title", "")
         releaseYear = fields.get("releaseYear", "")
 
-        directorsString = fields.get("directors", "")
-        directors = []
-        if directorsString != "":
-            directors = directorsString.split(",")
-            for i in range(len(directors)):
-                directors[i] = directors[i].strip()
-        
-        castString = fields.get("cast", "")
-        cast = []
-        if castString != "":
-            cast = castString.split(",")
-            for i in range(len(cast)):
-                cast[i] = cast[i].strip()
-
-        genresString = fields.get("genres", "")
-        genres = []
-        if genresString != "":
-            genres = genresString.split(",")
-            for i in range(len(genres)):
-                genres[i] = genres[i].strip()
+        directors = Movie.extractSet(fields, "directors")
+        cast = Movie.extractSet(fields, "cast")
+        genres = Movie.extractSet(fields, "genres")
         
         srcString = fields.get("src", "")
-        srcs = [srcString]
+        srcs = set()
+        srcs.add(srcString)
 
         if withPlot:
             plot = Movie.extractPlot(fields, fileName, separator, plotFieldId)
@@ -145,7 +135,8 @@ class Movie:
                                                                                             4, withPlot)     
         raud = rottenFields.get("audienceScore", "")
         rcrt = rottenFields.get("tomatometerScore", "")
-        rating = rottenFields.get("rating", "")
+        rating = set()
+        rating.add(rottenFields.get("rating", ""))
         return Movie(title = title, 
                     releaseYear = releaseYear, 
                     genres = genres,
@@ -167,7 +158,8 @@ class Movie:
                                                                                             ";;",
                                                                                             7, withPlot)     
         imdb = imdbFields.get("score", "")
-        rating = imdbFields.get("rating", "")
+        rating = set()
+        rating.add(imdbFields.get("rating", ""))
         return Movie(title = title, 
                     releaseYear = releaseYear, 
                     genres = genres,
@@ -183,23 +175,20 @@ class Movie:
             return str1
         return str2
 
-    def mergeList(list1, list2):
-        return list(set(list1) | set(list2))
-
     def mergeMovies(movie1, movie2):
         title = Movie.returnLonger(movie1.title, movie2.title)
         releaseYear = Movie.returnLonger(movie1.releaseYear, movie2.releaseYear)
         origin = Movie.returnLonger(movie1.origin, movie2.origin)
         # TODO: Da capire
-        rating = Movie.returnLonger(movie1.rating, movie2.rating)
-        genres = Movie.mergeList(movie1.genres, movie2.genres)
+        rating = movie1.rating | movie2.rating
+        genres = movie1.genres | movie2.genres
         imdb = Movie.returnLonger(movie1.imdb, movie2.imdb)
         raud = Movie.returnLonger(movie1.raud, movie2.raud)
         rcrt = Movie.returnLonger(movie1.rcrt, movie2.rcrt)
-        directors = Movie.mergeList(movie1.directors, movie2.directors)
-        cast = Movie.mergeList(movie1.cast, movie2.cast)
+        directors = movie1.directors | movie2.directors
+        cast = movie1.cast | movie2.cast
         plot = Movie.returnLonger(movie1.plot, movie2.plot)
-        srcs = Movie.mergeList(movie1.srcs, movie2.srcs)
+        srcs = movie1.srcs | movie2.srcs
         return Movie(title, releaseYear, origin, rating, genres, imdb, raud, rcrt, directors, cast, plot, srcs)
 
 

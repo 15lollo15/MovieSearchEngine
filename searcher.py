@@ -11,7 +11,6 @@ IMDB_INDEX = "imdb_index"
 ROTTEN_INDEX = "rotten_index"
 WIKI_INDEX = "wiki_index"
 
-# TODO: Da spostare
 def sortDict(dict):
     sorted_values = sorted(dict.values(), reverse=True) # Sort the values
     sorted_dict = {}
@@ -24,8 +23,6 @@ def sortDict(dict):
     
     return sorted_dict
 
-
-
 def searchIn(corpusDir, query, limit=10, sort=None):
     ix = open_dir(corpusDir)
     searcher = ix.searcher(weighting=scoring.TF_IDF())
@@ -35,63 +32,59 @@ def searchIn(corpusDir, query, limit=10, sort=None):
     results = searcher.search(query, limit=limit, sortedby=sort)
     return results
 
-# TODO: Riscrivere meglio
+def getScore(index, results1, results2, scores):
+    len1 = len(results1)
+    keys1 = list(results1)
+    T = 0
+    if index < len1 :
+        key = keys1[index]
+        score1 = results1.get(key, 0)
+        T = score1
+        score2 = results2.get(key, 0)
+        if scores.get(key, -1) == -1:
+            scores[key] = score1 + score2
+
+
+def getThreshold(index, results1):
+    keys1 = list(results1)
+    if index+1 < len(results1):
+        return results1.get(keys1[index+1], 0)
+    return 0
+
+def cleanScores(scores, k_max):
+    if len(scores) >= k_max :
+        s = len(scores) - k_max
+        for i in range(s):
+            scores.pop(list(scores)[k_max])
+
+def countValidScores(scores, T):
+    count = 0
+    for key in scores.keys():
+        if scores[key] > T:
+            count += 1
+    return count
+
 def thresholdMerge(results1, results2, k_max = 10):
     scores = {}
     len1 = len(results1)
     len2 = len(results2)
     k = max(len1, len2)
     k = min(k, k_max)
-    keys1 = list(results1)
-    keys2 = list(results2)
-    #print(results1)
     index = 0
     for index in range(k):
-        T = 0
-        if index < len1 :
-            key = keys1[index]
-            score1 = results1.get(key, 0)
-            T += score1
-            score2 = results2.get(key, 0)
-            if scores.get(key, -1) == -1:
-                scores[key] = score1 + score2
+        getScore(index, results1, results2, scores)
+        getScore(index, results2, results1, scores)
 
-        if index < len2 :
-            key = keys2[index]
-            score2 = results2.get(key, 0)
-            T += score2
-            score1 = results1.get(key, 0)
-            if scores.get(key, -1) == -1:
-                scores[key] = score1 + score2
-
-        t1 = 0
-        if index+1 < len1:
-            t1 = results1.get(keys1[index+1], 0)
-
-        t2 = 0
-        if index+1 < len2:
-            t2 = results2.get(keys2[index+1], 0)
-
-        scores = sortDict(scores)
-        #print("B", scores)
+        t1 = getThreshold(index, results1)
+        t2 = getThreshold(index, results2)
         T = t1 + t2
-        #print(T)
-        #print(scores)
-        if len(scores) >= k_max :
-            s = len(scores) - k_max
-            for i in range(s):
-                scores.pop(list(scores)[k_max])
-        #print(scores)
-        count = 0
-        for key in scores.keys():
-            if scores[key] > T:
-                count += 1
+        scores = sortDict(scores)
+        cleanScores(scores, k_max)
+        count = countValidScores(scores, T)
         if count == k:
             return scores
     return scores
         
-
-# TODO: Da spostare
 def toDictionary(results, fun):
     dict = {}
     #print(results)
@@ -117,27 +110,18 @@ def selectField(movies, fieldname):
     return ""
 
 
+def getMovieFrom(index, id, extractFunction):
+    results  = list(searchIn(index, "id:\""+id+"\""))
+    r = None
+    if len(results) > 0:
+        r = results[0]
+    movie = extractFunction(r)
+    return movie
+
 def getMovie(id):
-    resultsImdb  = list(searchIn(IMDB_INDEX, "id:\""+id+"\""))
-    rImdb = None
-    if len(resultsImdb) > 0:
-        rImdb = resultsImdb[0]
-    imdbMovie = Movie.fromImdb(rImdb)
-    #print(imdbMovie)
-    
-    resultsRotten = list(searchIn(ROTTEN_INDEX, "id:\""+id+"\""))
-    rRotten = None
-    if len(resultsRotten) > 0:
-        rRotten = resultsRotten[0]
-    rottenMovie = Movie.fromRotten(rRotten)
-    #print("\n", rottenMovie)
-    
-    resultsWiki = list(searchIn(WIKI_INDEX, "id:\""+id+"\""))
-    rWiki = None
-    if len(resultsWiki) > 0:
-        rWiki = resultsWiki[0]
-    wikiMovie = Movie.fromWiki(rWiki)
-    #print("\n",wikiMovie)
+    imdbMovie  = getMovieFrom(IMDB_INDEX, id, Movie.fromImdb)
+    rottenMovie = getMovieFrom(ROTTEN_INDEX, id, Movie.fromRotten)
+    wikiMovie = getMovieFrom(WIKI_INDEX, id, Movie.fromWiki)
 
     if imdbMovie == None and rottenMovie == None and wikiMovie == None:
         return None
@@ -157,9 +141,7 @@ def mergeMovies(movies1, movies2):
     merged = set()
     for k1 in set1:
         for k2 in set2:
-            #print(k1.title, k1.releaseYear, k2.title, k2.releaseYear)
             if k1 == k2:
-                #print(k1.title)
                 merged.add(Movie.mergeMovies(k1, k2))
     merged = merged.union(set2.difference(set1))
     merged = merged.union(set1.difference(set2))
@@ -189,6 +171,7 @@ def search(rQuery):
     for k in moviesImdb.keys():
         print(k.title, moviesImdb[k])
     '''
+    
 
     resultsRotten = searchIn(ROTTEN_INDEX, query.getRottenQuery(), query.limit, None)
     moviesRotten = toDictionary(resultsRotten, Movie.fromRotten)
@@ -197,6 +180,7 @@ def search(rQuery):
     for k in moviesRotten.keys():
         print(k.title, moviesRotten[k])
     '''
+    
 
     merged = mergeMovies(moviesImdb, moviesRotten)
 
@@ -207,6 +191,7 @@ def search(rQuery):
     for k in moviesWiki.keys():
         print(k.title, moviesWiki[k])
     '''
+    
 
     merged = mergeMovies(merged, moviesWiki)
 
@@ -239,28 +224,13 @@ def search(rQuery):
                 merged[k] = scores[k]
         merged = sortDict(merged)
         merged = cutAtRank(merged, query.limit)
- 
+    
+    '''
+    print("\nRisultato")
+    for k in merged.keys():
+        print(k.title, merged[k])
+    '''
+
     return list(merged.keys())
     
-
-
-
-'''
-ix = open_dir("imdb_index")
-searcher = ix.searcher()
-#print(list(searcher.lexicon("plot")))
-'''
-'''
-for t in list(searcher.lexicon("plot")):
-    print(t.decode("utf-8"))
-'''
-'''
-parser = QueryParser("plot", schema=ix.schema)
-query = parser.parse(b'serial killer')
-results = searcher.search(query, limit=20)
-if len(results) == 0:
-    print("Empty result!!")
-else:
-    for x in results:
-        print(x.fields()["title"])
-'''
+search("batman")
