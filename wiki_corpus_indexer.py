@@ -20,7 +20,7 @@ schema = Schema(
                 genres = KEYWORD(stored = True, commas=True, scorable=True, lowercase=True),
                 src = STORED,
                 plot = TEXT(analyzer = my_analyzer),
-                corpusIndex = STORED
+                fileName = STORED
                 )
 
 if not os.path.exists("wiki_index"):
@@ -29,14 +29,15 @@ ix = create_in("wiki_index", schema)
 
 writer = ix.writer()
 
-csvFile = open("corpus/wiki_corpus_reduced.csv", mode="r", encoding="utf-8")
-csv_reader = csv.reader(csvFile, delimiter=",")
-line_count = 0
 print("Inizio analisi")
-for row in csv_reader:
+PATH = "corpus/wiki_corpus"
+docs_files = os.listdir(PATH)
+for doc in docs_files:
+    csvFile = open(PATH + "/" + doc, mode="r", encoding="utf-8")
+    line = csvFile.readline()
+    row = line.split(";;")
     releaseYear = row[0]
-    if int(releaseYear) < 1990 or int(releaseYear) > 2003:
-        line_count += 1
+    if int(releaseYear) < 1990 or int(releaseYear) > 2015:
         continue
     title = row[1]
     origin = row[2]
@@ -45,7 +46,8 @@ for row in csv_reader:
     genres = row[5]
     src = row[6]
     plot = row[7]
-    corpusIndex = str(line_count)
+    fileName = PATH + "/" + doc
+    print(fileName)
     writer.add_document(
                         id = (releaseYear + " " + title),
                         releaseYear = releaseYear, 
@@ -56,8 +58,8 @@ for row in csv_reader:
                         genres = genres,
                         src = src,
                         plot = plot,
-                        corpusIndex = corpusIndex)
-    line_count += 1
+                        fileName = fileName)
+
 print("Fine analisi")
 print("Inizio commit")
 writer.commit()

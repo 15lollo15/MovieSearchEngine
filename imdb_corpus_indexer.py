@@ -20,7 +20,7 @@ schema = Schema(
                 cast = TEXT(stored = True),
                 plot = TEXT(analyzer = my_analyzer),
                 src = STORED,
-                corpusIndex = STORED
+                fileName = STORED
                 )
 
 # TODO: Può essere una funzione
@@ -30,13 +30,12 @@ ix = create_in("imdb_index", schema)
 # ------------------------------------
 writer = ix.writer()
 
-csvFile = open("corpus/imdb_corpus_clean.csv", mode="r", encoding="utf-8")
-line_count = 0
 print("Inizio analisi")
-for line in csvFile:
-    #if line_count >= 1000:
-        #break;
-    print(line_count)
+PATH = "corpus/imdb_corpus"
+docs_files = os.listdir(PATH)
+for doc in docs_files:
+    csvFile = open(PATH + "/" + doc, mode="r", encoding="utf-8")
+    line = csvFile.readline()
     row = line.split(";;")
     title = row[0]
     releaseYear = row[1]
@@ -47,7 +46,8 @@ for line in csvFile:
     cast = row[6]
     plot = row[7]
     src = row[8]
-    corpusIndex = str(line_count)
+    fileName = PATH + "/" + doc
+    print(fileName)
     writer.add_document(
                         id = (releaseYear + " " + title),
                         title = title,
@@ -59,9 +59,9 @@ for line in csvFile:
                         cast = cast,
                         plot = plot,
                         src = src,
-                        corpusIndex = corpusIndex
+                        fileName = fileName
                         )
-    line_count += 1
+
 print("Fine analisi")
 print("Inizio commit")
 writer.commit()

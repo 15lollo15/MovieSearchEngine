@@ -13,7 +13,7 @@ class Movie:
                 directors = set(),
                 cast = set(),
                 plot = "",
-                srcs = set()
+                srcs = {}
                 ):
         self.title = title
         self.releaseYear = releaseYear
@@ -59,28 +59,12 @@ class Movie:
 
 
 
-    def extractPlot(fields, fileName, separator, fieldId):
-        corpusIndex = int(fields.get("corpusIndex", ""))
-        if(fileName == "corpus/wiki_corpus_reduced.csv"):
-            csvFile = open(fileName, mode="r", encoding="utf-8")
-            csv_reader = csv.reader(csvFile, delimiter=separator)
-            plot = ""
-            lc = 0
-            for row in csv_reader:
-                if lc == corpusIndex:
-                    plot = row[fieldId]
-                    break
-                lc += 1
-            return plot
+    def extractPlot(fields, fieldId):
+        fileName = fields.get("fileName")
         csvFile = open(fileName, mode="r", encoding="utf-8")
-        plot = ""
-        lc = 0
-        for row in csvFile:
-            if lc == corpusIndex:
-                plot = row.split(separator)[fieldId]
-                break
-            lc += 1
-        return plot
+        line = csvFile.readline()
+        row = line.split(";;")
+        return row[fieldId]
 
     def extractSet(fields, fieldName):
         fieldString = fields.get(fieldName, "")
@@ -91,7 +75,7 @@ class Movie:
                 extractedSet.add(splitted[i].strip())
         return extractedSet
 
-    def extractCommonFields(fields, fileName, separator, plotFieldId, withPlot=True):
+    def extractCommonFields(fields, plotFieldId, srcName, withPlot=True):
         title = fields.get("title", "")
         releaseYear = fields.get("releaseYear", "")
 
@@ -100,11 +84,10 @@ class Movie:
         genres = Movie.extractSet(fields, "genres")
         
         srcString = fields.get("src", "")
-        srcs = set()
-        srcs.add(srcString)
+        srcs = {srcName : srcString}
 
         if withPlot:
-            plot = Movie.extractPlot(fields, fileName, separator, plotFieldId)
+            plot = Movie.extractPlot(fields, plotFieldId)
         else:
             plot = ""
 
@@ -115,10 +98,8 @@ class Movie:
             return Movie()
         wikiFields = wikiResult.fields()
         origin = wikiFields.get("origin", "")
-        title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(wikiFields, 
-                                                                                            "corpus/wiki_corpus_reduced.csv",
-                                                                                            ",",
-                                                                                            7, withPlot)     
+        title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(wikiFields,
+                                                                                            7, "wiki", withPlot)     
         return Movie(title = title, 
                     releaseYear = releaseYear, 
                     origin = origin, 
@@ -133,9 +114,7 @@ class Movie:
             return Movie()
         rottenFields = rottenResult.fields()
         title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(rottenFields, 
-                                                                                            "corpus/rotten_corpus_clean.csv",
-                                                                                            ";;",
-                                                                                            4, withPlot)     
+                                                                                            4, "rotten", withPlot)     
         raud = rottenFields.get("audienceScore", "")
         rcrt = rottenFields.get("tomatometerScore", "")
         rating = set()
@@ -157,9 +136,7 @@ class Movie:
         #print(imdbResult)
         imdbFields = imdbResult.fields()
         title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(imdbFields, 
-                                                                                            "corpus/imdb_corpus_clean.csv",
-                                                                                            ";;",
-                                                                                            7, withPlot)     
+                                                                                            7, "imdb", withPlot)     
         imdb = imdbFields.get("score", "")
         rating = set()
         rating.add(imdbFields.get("rating", ""))

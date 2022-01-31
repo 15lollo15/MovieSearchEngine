@@ -22,7 +22,7 @@ schema = Schema(id = ID(stored=True),
                 releaseYear = NUMERIC(stored = True, sortable=True),
                 cast = TEXT(stored = True),
                 src = STORED,
-                corpusIndex = STORED
+                fileName = STORED
                 )
 
 if not os.path.exists("rotten_index"):
@@ -31,13 +31,12 @@ ix = create_in("rotten_index", schema)
 
 writer = ix.writer()
 
-csvFile = open("corpus/rotten_corpus_clean.csv", mode="r", encoding="utf-8")
-line_count = 0
+PATH = "corpus/rotten_corpus"
 print("Inizio analisi")
-for line in csvFile:
-    #if line_count >= 1000:
-        #break
-    print(line_count)
+docs_files = os.listdir(PATH)
+for doc in docs_files:
+    csvFile = open(PATH + "/" +doc, mode="r", encoding="utf8")
+    line = csvFile.readline()
     row = line.split(";;")
     title = row[0]
     audienceScore = row[1]
@@ -53,10 +52,9 @@ for line in csvFile:
     releaseYear = row[7]
     cast = row[8]
     src = row[9].replace("\n", "")
-    print(src)
-    corpusIndex = line_count
+    fileName = PATH + "/" +doc
+    print(doc)
 
-    print(audienceScore, tomatometerScore, releaseYear)
     writer.add_document(
                         id = (releaseYear + " " + title),
                         title = title,
@@ -69,9 +67,9 @@ for line in csvFile:
                         releaseYear = releaseYear,
                         cast = cast,
                         src = src,
-                        corpusIndex = corpusIndex
+                        fileName = fileName
                         )
-    line_count += 1
+
 print("Fine analisi")
 print("Inizio commit")
 writer.commit()

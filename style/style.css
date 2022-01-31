@@ -1,3 +1,37 @@
-html {
-    font-family: 'Franklin Gothic Medium';
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Consolas";
+} 
+
+.searchDiv {
+    position: absolute;
+    width: 100vw; 
+    text-align: center;
+    top:46vh
+}
+
+.searchBar {
+    font-size: 1.2em;
+    width: 40vw;
+    height: 2em;
+    margin-bottom: 2vh;
+}
+
+.searchButton {
+    background-color: white;
+    font-size: 2em;
+    padding: 0.2em;
+}
+
+.searchButton:hover{
+    background-color: black;
+    color: white;
+    font-size: 2em;
+    padding: 0.2em;
+}
+
+.websiteTitle {
+    margin-bottom: 2vh;
 }

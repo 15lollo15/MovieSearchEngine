@@ -8,10 +8,12 @@
         <link rel='stylesheet' type='text/css' media='screen' href='/style/style.css'>
     </head>
     <body>
-        <form method="GET" action="/search">
-            <p>Inserisci query</p>
-            <input type="text" name="query">
-            <button type="submit">Invio</button>
-        </form>
+        <div class="searchDiv">
+            <form method="GET" action="/search">
+                <h1 class="websiteTitle">Movie Search Engine</h1>
+                <input class="searchBar" type="text" name="query" required><br>
+                <button class="searchButton"type="submit">Search</button>
+            </form>
+        </div>
     </body>
 </html>
