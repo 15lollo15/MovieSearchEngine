@@ -12,7 +12,6 @@ serverPort = 8080
 # TODO: Plot si vede malissimo
 # TODO: Idea triste: JAVA cambia '\n' con '<br>', Pyton cambia '<br>' con '\n'
 # TODO: Aggiungere tolower in fase di indexing
-# TODO: Query vuota?
 
 class MyServer(BaseHTTPRequestHandler):
 
@@ -23,6 +22,7 @@ class MyServer(BaseHTTPRequestHandler):
         if len(splitted) > 1:
             attrString = splitted[1].split("&")
             for a in attrString:
+                print("ATTRIBUTO:",a)
                 key = a.split("=")[0]
                 value = a.split("=")[1].replace("%20", " ")
                 attr[key] = value
@@ -43,10 +43,7 @@ class MyServer(BaseHTTPRequestHandler):
                     self.sendHome()
                     return
                 results = search(query)
-                str += "<ul>"
-                for r in results:
-                    str += "<li><a href='view?movie-id=" + r.getId() + "'>" + r.title + "</a></li>"
-                str += "</ul>"
+                str = MyServer.createResultsPage(results)
             else:
                 self.sendHome()
                 return
@@ -67,6 +64,57 @@ class MyServer(BaseHTTPRequestHandler):
         self.send_response(301)
         self.send_header('Location','http://'+hostName+":"+ str(serverPort))
         self.end_headers()
+
+    def createSingleResult(movie: Movie):
+        htmlString = MyServer.readTextFile("html/singleResult.html")
+        htmlString = htmlString.replace(r"%%MOVIE_ID%%", movie.id)
+        htmlString = htmlString.replace(r"%%TITLE%%", movie.title)
+
+        ratingString = ""
+        for r in movie.rating:
+            ratingString += r + ", "
+        ratingString = ratingString[:-2]
+        if ratingString == "":
+            ratingString = "-"
+        htmlString = htmlString.replace(r"%%RATING%%", ratingString)
+
+        htmlString = htmlString.replace(r"%%RELEASE_YEAR%%", movie.releaseYear)
+
+        directorsString = ""
+        for d in movie.directors:
+            directorsString += d + ", "
+        directorsString = directorsString[:-2]
+        htmlString = htmlString.replace(r"%%DIRECTORS%%", directorsString)
+
+        genresString = ""
+        for g in movie.genres:
+            genresString += g + ", "
+        genresString = genresString[:-2]
+        htmlString = htmlString.replace(r"%%GENRES%%", genresString)
+
+        rcrt = movie.rcrt
+        if rcrt == "":
+            rcrt = "-"
+        raud = movie.raud
+        if raud == "":
+            raud = "-"
+        imdb = movie.imdb
+        if imdb == "":
+            imdb = "-"
+        htmlString = htmlString.replace(r"%%RCRT%%", rcrt)
+        htmlString = htmlString.replace(r"%%RAUD%%", raud)
+        htmlString = htmlString.replace(r"%%IMDB%%", imdb)
+
+        return htmlString
+
+    def createResultsPage(results):
+        htmlString = MyServer.readTextFile("html/results.html")
+
+        str = ""
+        for r in results:
+            str += MyServer.createSingleResult(r)
+        
+        return htmlString.replace(r"%%RESULTS%%", str)
 
     def createViewPage(movie:Movie):
         htmlString = MyServer.readTextFile("html/viewPage.html");

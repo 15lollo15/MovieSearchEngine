@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from cgi import print_directory
+import html
 from turtle import title
 from whoosh.index import create_in
 from whoosh.fields import *
@@ -56,7 +57,7 @@ for doc in docs_files:
     print(doc)
 
     writer.add_document(
-                        id = (releaseYear + " " + title),
+                        id = (releaseYear + " " + html.unescape(title).replace('&', 'and')),
                         title = title,
                         audienceScore = audienceScore,
                         tomatometerScore = tomatometerScore,

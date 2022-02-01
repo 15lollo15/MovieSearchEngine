@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from cgi import print_directory
+import html
 from whoosh.index import create_in
 from whoosh.fields import *
 import os, os.path
@@ -49,7 +50,7 @@ for doc in docs_files:
     fileName = PATH + "/" + doc
     print(fileName)
     writer.add_document(
-                        id = (releaseYear + " " + title),
+                        id = (releaseYear + " " + html.unescape(title).replace("&", "and")),
                         releaseYear = releaseYear, 
                         title = title, 
                         origin = origin,

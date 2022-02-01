@@ -1,7 +1,8 @@
 import csv
 
 class Movie:
-    def __init__(self, 
+    def __init__(self,
+                id = "", 
                 title = "", 
                 releaseYear = "",
                 origin = "",
@@ -15,6 +16,7 @@ class Movie:
                 plot = "",
                 srcs = {}
                 ):
+        self.id = id
         self.title = title
         self.releaseYear = releaseYear
         self.origin = origin
@@ -28,21 +30,20 @@ class Movie:
         self.plot = plot
         self.srcs = srcs
 
-    def getId(self):
-        return self.releaseYear + " " + self.title
 
     def __eq__(self, __o: object):
         if not isinstance(__o, Movie):
             return False
         movie2 = __o
         #print("Dentro __eq__", movie2.title)
-        return self.title == movie2.title and self.releaseYear == movie2.releaseYear
+        return self.id == movie2.id
 
     def __hash__(self):
-        return hash((self.releaseYear, self.title))
+        return hash(self.id)
 
     def __str__(self):
         str = ""
+        str += self.id + "\n"
         str += self.title + "\n"
         str += self.releaseYear + "\n"
         str += self.origin + "\n"
@@ -76,6 +77,7 @@ class Movie:
         return extractedSet
 
     def extractCommonFields(fields, plotFieldId, srcName, withPlot=True):
+        id = fields.get("id","")
         title = fields.get("title", "")
         releaseYear = fields.get("releaseYear", "")
 
@@ -91,16 +93,17 @@ class Movie:
         else:
             plot = ""
 
-        return title, releaseYear, directors, cast, genres, srcs, plot
+        return id, title, releaseYear, directors, cast, genres, srcs, plot
 
     def fromWiki(wikiResult, withPlot=True):
         if wikiResult == None:
             return Movie()
         wikiFields = wikiResult.fields()
         origin = wikiFields.get("origin", "")
-        title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(wikiFields,
+        id, title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(wikiFields,
                                                                                             7, "wiki", withPlot)     
-        return Movie(title = title, 
+        return Movie(id = id,
+                    title = title, 
                     releaseYear = releaseYear, 
                     origin = origin, 
                     genres= genres,
@@ -113,13 +116,14 @@ class Movie:
         if rottenResult == None:
             return Movie()
         rottenFields = rottenResult.fields()
-        title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(rottenFields, 
+        id, title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(rottenFields, 
                                                                                             4, "rotten", withPlot)     
         raud = rottenFields.get("audienceScore", "")
         rcrt = rottenFields.get("tomatometerScore", "")
         rating = set()
         rating.add(rottenFields.get("rating", ""))
-        return Movie(title = title, 
+        return Movie(id = id,
+                    title = title, 
                     releaseYear = releaseYear, 
                     genres = genres,
                     directors = directors,
@@ -135,12 +139,13 @@ class Movie:
             return Movie()
         #print(imdbResult)
         imdbFields = imdbResult.fields()
-        title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(imdbFields, 
+        id, title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(imdbFields, 
                                                                                             7, "imdb", withPlot)     
         imdb = imdbFields.get("score", "")
         rating = set()
         rating.add(imdbFields.get("rating", ""))
-        return Movie(title = title, 
+        return Movie(id = id,
+                    title = title, 
                     releaseYear = releaseYear, 
                     genres = genres,
                     directors = directors,
@@ -156,6 +161,7 @@ class Movie:
         return str2
 
     def mergeMovies(movie1, movie2):
+        id = movie1.id
         title = Movie.returnLonger(movie1.title, movie2.title)
         releaseYear = Movie.returnLonger(movie1.releaseYear, movie2.releaseYear)
         origin = Movie.returnLonger(movie1.origin, movie2.origin)
@@ -169,7 +175,7 @@ class Movie:
         cast = movie1.cast | movie2.cast
         plot = Movie.returnLonger(movie1.plot, movie2.plot)
         srcs = movie1.srcs | movie2.srcs
-        return Movie(title, releaseYear, origin, rating, genres, imdb, raud, rcrt, directors, cast, plot, srcs)
+        return Movie(id, title, releaseYear, origin, rating, genres, imdb, raud, rcrt, directors, cast, plot, srcs)
 
 
     def compareByReleaseYear(m1, m2):

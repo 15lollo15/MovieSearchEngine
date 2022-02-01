@@ -17,12 +17,20 @@
     width: 40vw;
     height: 2em;
     margin-bottom: 2vh;
+    padding: 0.5em;
+    border: 0.2em solid
+}
+
+.searchBar:focus {
+    border: 0.2em solid;
+    border-radius: 0%;
 }
 
 .searchButton {
     background-color: white;
     font-size: 2em;
     padding: 0.2em;
+    transition: .25s;
 }
 
 .searchButton:hover{
@@ -32,6 +40,36 @@
     padding: 0.2em;
 }
 
+.websiteTitleSmall{
+    font-weight: bold;
+    font-size: 1.7em;
+}
+
 .websiteTitle {
     margin-bottom: 2vh;
+}
+
+.singleResult{
+    width: 100%;
+    transition: .25s;
+    padding: 1.2em 0.5em 1.2em 0.5em;
+}
+
+.singleResult:hover{
+    background-color: black;
+    color: white;
+}
+
+.resultTitle {
+    font-weight: bold; 
+    font-size: 1.5em;
+}
+
+.resultsDiv {
+    padding: 2em;
+    width: 75vw;
+}
+
+a{
+    color:black
 }
