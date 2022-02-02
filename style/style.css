@@ -33,6 +33,16 @@
     transition: .25s;
 }
 
+.searchButton.inverted {
+    background-color: black;
+    color:white
+}
+
+.searchButton.inverted:hover {
+    background-color: white;
+    color:black;
+}
+
 .searchButton:hover{
     background-color: black;
     color: white;
@@ -72,4 +82,25 @@
 
 a{
     color:black
+}
+
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+th, td{
+    padding: 1em;
+}
+
+.tableTitle{
+    color:white;
+    background-color: #016871;
+    /*
+    color: black;
+    font-size: 1.2em;
+    background-color: #ffffff;
+    opacity: 0.8;
+    background-size: 10px 10px;
+    background-image: repeating-linear-gradient(45deg, #000000 0, #000000 1px, #ffffff 0, #ffffff 50%);*/
 }

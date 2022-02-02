@@ -4,7 +4,7 @@ from venv import create
 import webbrowser
 from movie import Movie
 from searcher import getMovie, search
-from urllib.parse import unquote
+from urllib.parse import quote, unquote
 
 hostName = "localhost"
 serverPort = 8080
@@ -12,6 +12,10 @@ serverPort = 8080
 # TODO: Plot si vede malissimo
 # TODO: Idea triste: JAVA cambia '\n' con '<br>', Pyton cambia '<br>' con '\n'
 # TODO: Aggiungere tolower in fase di indexing
+# TODO: Rigenerare Rotten(e anche gli altri) con JAVA
+# TODO: Fix parameters query
+# TODO: Fix ALL (Ex. "day after tomorrow ALL")
+# TODO: Pesi migliorati per documenti con tutte le parole chiave sopratutto nel titolo
 
 class MyServer(BaseHTTPRequestHandler):
 
@@ -42,14 +46,18 @@ class MyServer(BaseHTTPRequestHandler):
                 if len(query.replace(" ", "")) == 0:
                     self.sendHome()
                     return
+
                 results = search(query)
                 str = MyServer.createResultsPage(results)
+
+                str = str.replace(r"%%QUERY%%", query)
             else:
                 self.sendHome()
                 return
         elif action == "/view":
             if len(attr) >= 0:
-                movie = getMovie(attr["movie-id"])
+                movieId = unquote(attr["movie-id"])
+                movie = getMovie(movieId)
                 str = MyServer.createViewPage(movie)
         elif action.startswith("/style"):
             str = MyServer.readTextFile(action.removeprefix("/"))
@@ -69,6 +77,7 @@ class MyServer(BaseHTTPRequestHandler):
         htmlString = MyServer.readTextFile("html/singleResult.html")
         htmlString = htmlString.replace(r"%%MOVIE_ID%%", movie.id)
         htmlString = htmlString.replace(r"%%TITLE%%", movie.title)
+        
 
         ratingString = ""
         for r in movie.rating:
@@ -118,7 +127,7 @@ class MyServer(BaseHTTPRequestHandler):
 
     def createViewPage(movie:Movie):
         htmlString = MyServer.readTextFile("html/viewPage.html");
-        htmlString = htmlString.replace(r"%%TITLE%%", movie.title)
+        htmlString = htmlString.replace(r"%%TITLE%%", (movie.title))
         htmlString = htmlString.replace(r"%%RELEASE_YEAR%%", movie.releaseYear)
 
         ratingString = ""
@@ -147,7 +156,7 @@ class MyServer(BaseHTTPRequestHandler):
 
         castString = ""
         for c in movie.cast:
-            castString += c + ", "
+            castString += "<li>" +c + "</li>"
         castString = castString[:-2]
         htmlString = htmlString.replace(r"%%CAST%%", castString)
 
@@ -168,7 +177,7 @@ class MyServer(BaseHTTPRequestHandler):
 if __name__ == "__main__":        
     webServer = HTTPServer((hostName, serverPort), MyServer)
     print("Server started http://%s:%s" % (hostName, serverPort))
-    webbrowser.open("http://" + hostName + ":" + str(serverPort))
+    #webbrowser.open("http://" + hostName + ":" + str(serverPort))
     try:
         webServer.serve_forever()
     except KeyboardInterrupt:
