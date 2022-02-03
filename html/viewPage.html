@@ -16,17 +16,18 @@
     <hr>
     <div style="padding: 2em;">
         <div>
-            <div style="float: right; margin: 0 0 1em 1em;">
+            <div style="float: right; width: 20vw; margin: 0 0 1em 1em;">
                 <div style="width: 100%; height: 100%; vertical-align: middle; margin-bottom: 1em; border: 1px solid;">
-                    <div style="width: 32%; display: inline-block; vertical-align: top;  border-right: 0.1em solid; text-align: center; padding:0.9em">
-                        <span style="font-weight: bold;">IMDb</span><br><br>
+                    <div style="width: 32%; height:100%; display: inline-block; vertical-align: top;  border-right: 0.1em solid; text-align: center; padding:0.7em">
+                        <span style="font-weight: bold;">IMDb</span><br><br><br>
                         <span>%%IMDB%%/10</span>
+                        <br>
                     </div>
-                    <div style="width: 32%; display: inline-block; vertical-align: top; border-right: 0.1em solid; text-align: center; padding:0.9em">
+                    <div style="width: 32%; height:100%; display: inline-block; vertical-align: top; border-right: 0.1em solid; text-align: center; padding:0.7em">
                         <span style="font-weight: bold;">Rotten Critic</span><br><br>
                         <span>%%RCRT%%/100</span>
                     </div>
-                    <div style="width: 31%; display: inline-block; vertical-align: top; text-align: center; padding:0.9em">
+                    <div style="width: 31%; height:100%; display: inline-block; vertical-align: top; text-align: center; padding:0.7em">
                         <span style="font-weight: bold;">Rotten User</span><br><br>
                         <span>%%RAUD%%/100</span>
                     </div>
@@ -65,10 +66,11 @@
         </div>
         <span style="font-weight: bold; font-size: 1.5em;">Plot</span><br><br>
         <p>%%PLOT%%</p>
-        <span>links:</span><br>
-        <a href="%%IMDB_SRC%%">IMDb</a><br>
-        <a href="%%ROTTEN_SRC%%">Rotten Tomatoes</a><br>
-        <a href="%%WIKI_SRC%%">Wikipedia</a>
+        <br>
+        <span style="font-weight: bold;font-size: 1.2em;">Links:</span><br>
+        <a style="font-size: 1.1em" href="%%IMDB_SRC%%" %%IMDB_HIDDEN%% target="_blank">IMDb<br></a>
+        <a style="font-size: 1.1em" href="%%ROTTEN_SRC%%" %%ROTTEN_HIDDEN%% target="_blank">Rotten Tomatoes<br></a>
+        <a style="font-size: 1.1em" href="%%WIKI_SRC%%"  %%WIKI_HIDDEN%% target="_blank">Wikipedia</a>
     </div>
 </body>
 </html>

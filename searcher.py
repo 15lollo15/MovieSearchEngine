@@ -25,7 +25,7 @@ def sortDict(dict):
 
 def searchIn(corpusDir, query, limit=10, sort=None):
     ix = open_dir(corpusDir)
-    searcher = ix.searcher(weighting=scoring.TF_IDF())
+    searcher = ix.searcher() # weighting=scoring.TF_IDF()
     parser = MultifieldParser(["title", "plot"], schema=ix.schema)
     setQueryParser(parser)
     query = parser.parse(query)
@@ -68,8 +68,13 @@ def thresholdMerge(results1, results2, k_max = 10):
     scores = {}
     len1 = len(results1)
     len2 = len(results2)
+
+    if k_max == None:
+        k_max = len1 + len2
+    
     k = max(len1, len2)
     k = min(k, k_max)
+    
     index = 0
     for index in range(k):
         getScore(index, results1, results2, scores)
@@ -153,6 +158,8 @@ def mergeMovies(movies1, movies2):
     return mapMerged
 
 def cutAtRank(map, rank):
+    if rank == None:
+        rank = len(map.keys())
     count = 0
     keys = list(map.keys())
     for k in keys:
@@ -164,33 +171,37 @@ def cutAtRank(map, rank):
 def search(rQuery):
     query = MyQuery(rQuery)
     #print(query.getSortedByImdb())
-    resultsImdb = searchIn(IMDB_INDEX, query.getImdbQuery(), query.limit, None)
+    resultsImdb = searchIn(IMDB_INDEX, query.getImdbQuery(), None, None)
     moviesImdb = toDictionary(resultsImdb, Movie.fromImdb)
     '''
     print("IMDB:")
     for k in moviesImdb.keys():
         print(k.title, moviesImdb[k])
-    '''
+        '''
+    
     
 
-    resultsRotten = searchIn(ROTTEN_INDEX, query.getRottenQuery(), query.limit, None)
+    resultsRotten = searchIn(ROTTEN_INDEX, query.getRottenQuery(), None, None)
     moviesRotten = toDictionary(resultsRotten, Movie.fromRotten)
     '''
     print("\nROTTEN:")
     for k in moviesRotten.keys():
         print(k.title, moviesRotten[k])
-    '''
+        '''
+    
     
 
     merged = mergeMovies(moviesImdb, moviesRotten)
 
-    resultsWiki = searchIn(WIKI_INDEX, query.getWikiQuery(), query.limit, None)
+    resultsWiki = searchIn(WIKI_INDEX, query.getWikiQuery(), None, None)
     moviesWiki = toDictionary(resultsWiki, Movie.fromWiki)
+    
     '''
     print("\nWIKI:")
     for k in moviesWiki.keys():
         print(k.title, moviesWiki[k])
-    '''
+        '''
+    
     
 
     merged = mergeMovies(merged, moviesWiki)
@@ -217,6 +228,9 @@ def search(rQuery):
         limit = min(query.limit, len(mergedList))
         return mergedList[0:limit]
     else:
+        sortDict(moviesImdb)
+        sortDict(moviesRotten)
+        sortDict(moviesWiki)
         scores = thresholdMerge(moviesImdb, moviesWiki, query.limit)
         scores = thresholdMerge(scores, moviesRotten, query.limit)
         for k in scores.keys():
@@ -230,7 +244,7 @@ def search(rQuery):
     for k in merged.keys():
         print(k.title, merged[k])
     '''
+    
 
     return list(merged.keys())
     
-search("batman")

@@ -1,21 +1,15 @@
 import html
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from venv import create
-import webbrowser
 from movie import Movie
 from searcher import getMovie, search
-from urllib.parse import quote, unquote
+from urllib.parse import unquote
+from htmlBuilder import *
 
 hostName = "localhost"
 serverPort = 8080
 
-# TODO: Plot si vede malissimo
-# TODO: Idea triste: JAVA cambia '\n' con '<br>', Pyton cambia '<br>' con '\n'
-# TODO: Aggiungere tolower in fase di indexing
-# TODO: Rigenerare Rotten(e anche gli altri) con JAVA
-# TODO: Fix parameters query
-# TODO: Fix ALL (Ex. "day after tomorrow ALL")
-# TODO: Pesi migliorati per documenti con tutte le parole chiave sopratutto nel titolo
+# TODO: Rigenerare Rotten(questione data)(e anche gli altri) con JAVA
+# TODO: Scroll orizzontale (Dark Knight Rises)
 
 class MyServer(BaseHTTPRequestHandler):
 
@@ -73,46 +67,30 @@ class MyServer(BaseHTTPRequestHandler):
         self.send_header('Location','http://'+hostName+":"+ str(serverPort))
         self.end_headers()
 
+    def replaceCommonTags(htmlString, movie):
+        htmlString = htmlString.replace(r"%%TITLE%%", (movie.title))
+        htmlString = htmlString.replace(r"%%RELEASE_YEAR%%", movie.releaseYear)
+
+        ratingString = iterToComma(movie.getRating())
+        htmlString = htmlString.replace(r"%%RATING%%", ratingString)
+
+        scores = movie.getScores()
+        htmlString = htmlString.replace(r"%%RCRT%%", scores["rcrt"])
+        htmlString = htmlString.replace(r"%%RAUD%%", scores["raud"])
+        htmlString = htmlString.replace(r"%%IMDB%%", scores["imdb"])
+        
+        genresString = iterToComma(movie.getGenres())
+        htmlString = htmlString.replace(r"%%GENRES%%", genresString)
+
+        directorsString = iterToComma(movie.directors)
+        print(movie.directors)
+        htmlString = htmlString.replace(r"%%DIRECTORS%%", directorsString)
+        return htmlString
+
     def createSingleResult(movie: Movie):
         htmlString = MyServer.readTextFile("html/singleResult.html")
         htmlString = htmlString.replace(r"%%MOVIE_ID%%", movie.id)
-        htmlString = htmlString.replace(r"%%TITLE%%", movie.title)
-        
-
-        ratingString = ""
-        for r in movie.rating:
-            ratingString += r + ", "
-        ratingString = ratingString[:-2]
-        if ratingString == "":
-            ratingString = "-"
-        htmlString = htmlString.replace(r"%%RATING%%", ratingString)
-
-        htmlString = htmlString.replace(r"%%RELEASE_YEAR%%", movie.releaseYear)
-
-        directorsString = ""
-        for d in movie.directors:
-            directorsString += d + ", "
-        directorsString = directorsString[:-2]
-        htmlString = htmlString.replace(r"%%DIRECTORS%%", directorsString)
-
-        genresString = ""
-        for g in movie.genres:
-            genresString += g + ", "
-        genresString = genresString[:-2]
-        htmlString = htmlString.replace(r"%%GENRES%%", genresString)
-
-        rcrt = movie.rcrt
-        if rcrt == "":
-            rcrt = "-"
-        raud = movie.raud
-        if raud == "":
-            raud = "-"
-        imdb = movie.imdb
-        if imdb == "":
-            imdb = "-"
-        htmlString = htmlString.replace(r"%%RCRT%%", rcrt)
-        htmlString = htmlString.replace(r"%%RAUD%%", raud)
-        htmlString = htmlString.replace(r"%%IMDB%%", imdb)
+        htmlString = MyServer.replaceCommonTags(htmlString, movie)
 
         return htmlString
 
@@ -125,45 +103,33 @@ class MyServer(BaseHTTPRequestHandler):
         
         return htmlString.replace(r"%%RESULTS%%", str)
 
+
     def createViewPage(movie:Movie):
         htmlString = MyServer.readTextFile("html/viewPage.html");
-        htmlString = htmlString.replace(r"%%TITLE%%", (movie.title))
-        htmlString = htmlString.replace(r"%%RELEASE_YEAR%%", movie.releaseYear)
 
-        ratingString = ""
-        for r in movie.rating:
-            ratingString += r + ", "
-        ratingString = ratingString[:-2]
-        htmlString = htmlString.replace(r"%%RATING%%", ratingString)
+        htmlString = MyServer.replaceCommonTags(htmlString, movie)
 
-        htmlString = htmlString.replace(r"%%RCRT%%", movie.rcrt)
-        htmlString = htmlString.replace(r"%%RAUD%%", movie.raud)
-        htmlString = htmlString.replace(r"%%IMDB%%", movie.imdb)
-        
-        genresString = ""
-        for g in movie.genres:
-            genresString += g + ", "
-        genresString = genresString[:-2]
-        htmlString = htmlString.replace(r"%%GENRES%%", genresString)
+        htmlString = htmlString.replace(r"%%PLOT%%", movie.plot.replace("\n", "<br>"))
 
-        directorsString = ""
-        for d in movie.directors:
-            directorsString += d + ", "
-        directorsString = directorsString[:-2]
-        htmlString = htmlString.replace(r"%%DIRECTORS%%", directorsString)
-
-        htmlString = htmlString.replace(r"%%PLOT%%", movie.plot)
-
-        castString = ""
-        for c in movie.cast:
-            castString += "<li>" +c + "</li>"
-        castString = castString[:-2]
+        castString = iterToLi(movie.getCast())
         htmlString = htmlString.replace(r"%%CAST%%", castString)
+        
+        srcs = movie.srcs
 
-        htmlString = htmlString.replace(r"%%IMDB_SRC%%", movie.srcs.get("imdb", ""))
-        htmlString = htmlString.replace(r"%%ROTTEN_SRC%%", movie.srcs.get("rotten", ""))
-        htmlString = htmlString.replace(r"%%WIKI_SRC%%", movie.srcs.get("wiki", ""))
+        htmlString = MyServer.replaceSrcs(htmlString, srcs, "imdb")
+        htmlString = MyServer.replaceSrcs(htmlString, srcs, "rotten")
+        htmlString = MyServer.replaceSrcs(htmlString, srcs, "wiki")
 
+        return htmlString
+
+    def replaceSrcs(htmlString, srcs, key):
+        src = srcs.get(key, "")
+        if src == "":
+            htmlString = htmlString.replace(r"%%"+key.upper()+r"_HIDDEN%%", "hidden")
+        else:
+            htmlString = htmlString.replace(r"%%"+key.upper()+r"_HIDDEN%%", "")
+        print(r"%%"+key.upper()+r"_SRC%%")
+        htmlString = htmlString.replace(r"%%"+key.upper()+r"_SRC%%", src)
         return htmlString
 
     def readTextFile(file_path):

@@ -46,7 +46,7 @@ for doc in docs_files:
     cast = row[4]
     genres = row[5]
     src = row[6]
-    plot = row[7]
+    plot = row[7].replace("<br>", "\n");
     fileName = PATH + "/" + doc
     print(fileName)
     writer.add_document(

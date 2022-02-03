@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import html
 
-s = r"Batman &amp; Robin"
-print(html.unescape(s))
+s = "cane\ngatto"
+
+print(s.replace("\n", "<br>"))
 
 

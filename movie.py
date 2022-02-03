@@ -30,6 +30,31 @@ class Movie:
         self.plot = plot
         self.srcs = srcs
 
+    def returnDefaultSet(set):
+        if len(set) == 0:
+            return {'-'}
+        return set
+
+    def getRating(self):
+        return Movie.returnDefaultSet(self.rating)
+
+    def getGenres(self):
+        return Movie.returnDefaultSet(self.genres)
+
+    def returnDefaultValue(str):
+        if str == "":
+            return "-"
+        return str
+
+    def getCast(self):
+        return Movie.returnDefaultSet(self.cast)
+
+    def getScores(self):
+        map = {}
+        map["imdb"] = Movie.returnDefaultValue(self.imdb)
+        map["raud"] = Movie.returnDefaultValue(self.raud)
+        map["rcrt"] = Movie.returnDefaultValue(self.rcrt)
+        return map
 
     def __eq__(self, __o: object):
         if not isinstance(__o, Movie):
@@ -167,7 +192,7 @@ class Movie:
         origin = Movie.returnLonger(movie1.origin, movie2.origin)
         # TODO: Da capire
         rating = movie1.rating | movie2.rating
-        genres = movie1.genres | movie2.genres
+        genres = {x.lower() for x in movie1.genres} | {x.lower() for x in movie2.genres}
         imdb = Movie.returnLonger(movie1.imdb, movie2.imdb)
         raud = Movie.returnLonger(movie1.raud, movie2.raud)
         rcrt = Movie.returnLonger(movie1.rcrt, movie2.rcrt)
