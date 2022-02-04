@@ -47,7 +47,7 @@ for doc in docs_files:
     if tomatometerScore == "":
         tomatometerScore = -1
     rating = row[3]
-    plot = row[4]
+    plot = row[4].replace("<br>", "\n")
     genres = row[5]
     directors = row[6]
     releaseYear = row[7]

@@ -10,6 +10,7 @@ serverPort = 8080
 
 # TODO: Rigenerare Rotten(questione data)(e anche gli altri) con JAVA
 # TODO: Scroll orizzontale (Dark Knight Rises)
+# TODO: "Horrible Bosses", "Birdman" Imdb
 
 class MyServer(BaseHTTPRequestHandler):
 

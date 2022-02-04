@@ -45,7 +45,7 @@ for doc in docs_files:
     score = str(round(float(row[4])))
     directors = row[5]
     cast = row[6]
-    plot = row[7]
+    plot = row[7].replace("<br>","\n")
     src = row[8]
     fileName = PATH + "/" + doc
     print(fileName)
