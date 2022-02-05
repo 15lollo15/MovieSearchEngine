@@ -17,6 +17,19 @@
         </div>
         <div class="resultsDiv">
             %%RESULTS%%
+            <div>
+                <form method="GET">
+                    <input type="hidden" name="query" value="%%QUERY%%">
+                    <input type="hidden" name="p" value="%%PREV_PAGE%%">
+                    <button type="submit"  %%HIDDEN_PREV%%>Prev page</button>
+                </form>
+                    %%PAGES%%
+                <form method="GET">
+                    <input type="hidden" name="query" value="%%QUERY%%">
+                    <input type="hidden" name="p" value="%%NEXT_PAGE%%">
+                    <button type="submit"  %%HIDDEN_NEXT%%>Next Page</button>
+                </form>
+            </div>
         </div>
     </body>
 </html>

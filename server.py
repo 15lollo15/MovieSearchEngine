@@ -8,9 +8,7 @@ from htmlBuilder import *
 hostName = "localhost"
 serverPort = 8080
 
-# TODO: Rigenerare Rotten(questione data)(e anche gli altri) con JAVA
-# TODO: Scroll orizzontale (Dark Knight Rises)
-# TODO: "Horrible Bosses", "Birdman" Imdb
+# TODO: Pagine negative, pagine con stringhe
 
 class MyServer(BaseHTTPRequestHandler):
 
@@ -21,14 +19,12 @@ class MyServer(BaseHTTPRequestHandler):
         if len(splitted) > 1:
             attrString = splitted[1].split("&")
             for a in attrString:
-                print("ATTRIBUTO:",a)
                 key = a.split("=")[0]
                 value = a.split("=")[1].replace("%20", " ")
                 attr[key] = value
         return action, attr
 
     def do_GET(self):
-        print(self.path)
         action, attr = self.parsePath()
         str = ""
         content_type = "text/html"
@@ -43,6 +39,14 @@ class MyServer(BaseHTTPRequestHandler):
                     return
 
                 results = search(query)
+                page = 0
+                if attr.get("p", None) != None and attr["p"] != "":
+                    page = int(attr["p"]) - 1
+
+                max_page = (len(results)%10 - 1)
+                if  page > max_page:
+                    page = max_page
+                #results = results[page*10:(page*10)+10]
                 str = MyServer.createResultsPage(results)
 
                 str = str.replace(r"%%QUERY%%", query)
@@ -84,7 +88,6 @@ class MyServer(BaseHTTPRequestHandler):
         htmlString = htmlString.replace(r"%%GENRES%%", genresString)
 
         directorsString = iterToComma(movie.directors)
-        print(movie.directors)
         htmlString = htmlString.replace(r"%%DIRECTORS%%", directorsString)
         return htmlString
 
@@ -129,7 +132,6 @@ class MyServer(BaseHTTPRequestHandler):
             htmlString = htmlString.replace(r"%%"+key.upper()+r"_HIDDEN%%", "hidden")
         else:
             htmlString = htmlString.replace(r"%%"+key.upper()+r"_HIDDEN%%", "")
-        print(r"%%"+key.upper()+r"_SRC%%")
         htmlString = htmlString.replace(r"%%"+key.upper()+r"_SRC%%", src)
         return htmlString
 

@@ -1,7 +1,6 @@
 import re
 
 class MyQuery:
-    ALL_REGEX = r"\sALL"
     TOP_REGEX = r"TOP:\d+"
     SORT_REGEX = r"\sSORT_BY:\S*"
     FIELD_SEPARATOR = ":"
@@ -15,15 +14,11 @@ class MyQuery:
  
     def getUserLimit(self):
         limit = MyQuery.DEFAULT_LIMIT
-        matchAll = re.search(MyQuery.ALL_REGEX, str(self.query))
         matchTop = re.search(MyQuery.TOP_REGEX, str(self.query))
-        if matchAll != None:
-            limit = None
-            self.query = self.query[:-len(matchAll.group())].strip()
-        elif matchTop != None:
+        if matchTop != None:
             numtop = int(matchTop.group().split(MyQuery.FIELD_SEPARATOR)[1])
             limit = numtop
-            self.query = self.query[:-len(matchTop.group())].strip()
+            self.query = self.query.replace(matchTop.group(), "")
         self.limit = limit
 
     def getUserSort(self):
@@ -31,7 +26,7 @@ class MyQuery:
         matchSortedBy = re.search(MyQuery.SORT_REGEX, str(self.query))
         if(matchSortedBy != None):
             sortedBy = matchSortedBy.group().split(MyQuery.FIELD_SEPARATOR)[1].strip()
-            self.query = self.query[:-len(matchSortedBy.group())].strip()
+            self.query = self.query.replace(matchSortedBy.group(), "")
         self.sortedBy = sortedBy
 
     def replaceShortcut(self):
@@ -81,3 +76,4 @@ class MyQuery:
         if self.sortedBy == None  or self.sortedBy=="score" or self.sortedBy=="audienceScore" or self.sortedBy=="tomatometerScore":
             return None
         return self.sortedBy
+

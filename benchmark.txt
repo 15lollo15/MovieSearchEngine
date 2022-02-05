@@ -1,0 +1,4 @@
+Ricerca per keyword
+Ricerca su Field
+Phrasal query
+TOP/ALL !! Pericolo !!

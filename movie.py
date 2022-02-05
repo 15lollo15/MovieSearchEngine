@@ -21,6 +21,8 @@ class Movie:
         self.releaseYear = releaseYear
         self.origin = origin
         self.rating = rating
+        if "NC" in self.rating:
+            self.rating.remove("NC")
         self.genres = genres
         self.imdb = imdb
         self.raud = raud
@@ -82,8 +84,6 @@ class Movie:
         str += self.plot + "\n"
         str += self.srcs.__str__() + "\n"
         return str
-
-
 
     def extractPlot(fields, fieldId):
         fileName = fields.get("fileName")
