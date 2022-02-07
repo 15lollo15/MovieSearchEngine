@@ -1,4 +1,4 @@
 Ricerca per keyword
-Ricerca su Field
+Ricerca su Field -> Tricky
 Phrasal query
-TOP/ALL !! Pericolo !!
+TOP

@@ -24,11 +24,9 @@ schema = Schema(
                 fileName = STORED
                 )
 
-# TODO: Può essere una funzione
 if not os.path.exists("imdb_index"):
     os.mkdir("imdb_index")
 ix = create_in("imdb_index", schema)
-# ------------------------------------
 writer = ix.writer()
 
 print("Inizio analisi")

@@ -2,8 +2,6 @@ from searcher import search, getMovie
 import webbrowser
 import re
 
-# TODO: \n in IMDb
-
 def viewResults(results):
     print("Results:")
     if len(results) == 0:

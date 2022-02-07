@@ -190,7 +190,6 @@ class Movie:
         title = Movie.returnLonger(movie1.title, movie2.title)
         releaseYear = Movie.returnLonger(movie1.releaseYear, movie2.releaseYear)
         origin = Movie.returnLonger(movie1.origin, movie2.origin)
-        # TODO: Da capire
         rating = movie1.rating | movie2.rating
         genres = {x.lower() for x in movie1.genres} | {x.lower() for x in movie2.genres}
         imdb = Movie.returnLonger(movie1.imdb, movie2.imdb)

@@ -8,9 +8,10 @@ from htmlBuilder import *
 hostName = "localhost"
 serverPort = 8080
 
-# TODO: Pagine negative, pagine con stringhe
 
 class MyServer(BaseHTTPRequestHandler):
+
+    MAX_RESULTS = 10
 
     def parsePath(self):
         splitted = self.path.split("?")
@@ -33,21 +34,26 @@ class MyServer(BaseHTTPRequestHandler):
         elif action == "/search":
             if len(attr) >= 0 and attr["query"] != "":
                 query = html.unescape(unquote(attr["query"].replace("+", " ")))
-                print(query)
                 if len(query.replace(" ", "")) == 0:
                     self.sendHome()
                     return
 
                 results = search(query)
-                page = 0
+                page = 1
                 if attr.get("p", None) != None and attr["p"] != "":
-                    page = int(attr["p"]) - 1
+                    try:
+                        page = int(attr["p"])
+                    except ValueError:
+                        page = 1
 
-                max_page = (len(results)%10 - 1)
+                if page < 1:
+                    page = 1
+
+                max_page = int(len(results)/MyServer.MAX_RESULTS)
                 if  page > max_page:
                     page = max_page
-                #results = results[page*10:(page*10)+10]
-                str = MyServer.createResultsPage(results)
+                results = results[(page-1)*MyServer.MAX_RESULTS:((page-1)*MyServer.MAX_RESULTS)+MyServer.MAX_RESULTS]
+                str = MyServer.createResultsPage(results, page, max_page)
 
                 str = str.replace(r"%%QUERY%%", query)
             else:
@@ -98,14 +104,45 @@ class MyServer(BaseHTTPRequestHandler):
 
         return htmlString
 
-    def createResultsPage(results):
+    def createPageForm(p, currentPage = False):
+        htmlString = MyServer.readTextFile("html/pageform.html")
+        htmlString = htmlString.replace(r"%%PAGE%%", str(p))
+        if currentPage:
+            htmlString = htmlString.replace(r"%%CURRENT_PAGE%%", "currentPage")
+        else:
+            htmlString = htmlString.replace(r"%%CURRENT_PAGE%%", "")
+        return htmlString
+
+    def createPageSelector(htmlString, p = 1, max_page = 1):
+        if p == 1:
+            htmlString = htmlString.replace(r"%%HIDDEN_PREV%%", "hidden")
+        else:
+            htmlString = htmlString.replace(r"%%PREV_PAGE%%", str(p-1))
+        
+        if p == max_page:
+            htmlString = htmlString.replace(r"%%HIDDEN_NEXT%%", "hidden")
+        else:
+            htmlString = htmlString.replace(r"%%NEXT_PAGE%%", str(p+1))
+        
+        pagesString = ""
+        for i in range(1, max_page+1):
+            currentPage = False
+            if i == p:
+                currentPage = True
+            pagesString += MyServer.createPageForm(i, currentPage)
+        return htmlString.replace(r"%%PAGES%%", pagesString)
+
+    def createResultsPage(results, p = 1, max_page = 1):
         htmlString = MyServer.readTextFile("html/results.html")
 
-        str = ""
+        string = ""
         for r in results:
-            str += MyServer.createSingleResult(r)
+            string += MyServer.createSingleResult(r)
         
-        return htmlString.replace(r"%%RESULTS%%", str)
+        htmlString =  htmlString.replace(r"%%RESULTS%%", string)
+        htmlString = MyServer.createPageSelector(htmlString, p, max_page)
+        
+        return htmlString
 
 
     def createViewPage(movie:Movie):

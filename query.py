@@ -5,6 +5,7 @@ class MyQuery:
     SORT_REGEX = r"\sSORT_BY:\S*"
     FIELD_SEPARATOR = ":"
     DEFAULT_LIMIT = 10
+    MAX_LIMIT = 200
 
     def __init__(self, rQuery):
         self.query = rQuery.strip()
@@ -19,7 +20,7 @@ class MyQuery:
             numtop = int(matchTop.group().split(MyQuery.FIELD_SEPARATOR)[1])
             limit = numtop
             self.query = self.query.replace(matchTop.group(), "")
-        self.limit = limit
+        self.limit = min(limit, MyQuery.MAX_LIMIT)
 
     def getUserSort(self):
         sortedBy = None

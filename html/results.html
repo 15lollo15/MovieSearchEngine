@@ -17,17 +17,17 @@
         </div>
         <div class="resultsDiv">
             %%RESULTS%%
-            <div>
-                <form method="GET">
+            <div style="vertical-align: sub; margin-top: 2em; width: 100%; padding-left:50%">
+                <form method="GET" style=" float: left;">
                     <input type="hidden" name="query" value="%%QUERY%%">
                     <input type="hidden" name="p" value="%%PREV_PAGE%%">
-                    <button type="submit"  %%HIDDEN_PREV%%>Prev page</button>
+                    <button class="searchButton" style="font-size: 1em; margin-top: 0.5em;" type="submit"  %%HIDDEN_PREV%%>Prev page</button>
                 </form>
-                    %%PAGES%%
-                <form method="GET">
+                %%PAGES%%
+                <form method="GET" style=" float: left;">
                     <input type="hidden" name="query" value="%%QUERY%%">
                     <input type="hidden" name="p" value="%%NEXT_PAGE%%">
-                    <button type="submit"  %%HIDDEN_NEXT%%>Next Page</button>
+                    <button class="searchButton" style="font-size: 1em; margin-top: 0.5em;" type="submit"  %%HIDDEN_NEXT%%>Next Page</button>
                 </form>
             </div>
         </div>
