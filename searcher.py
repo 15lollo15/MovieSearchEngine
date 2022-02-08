@@ -1,3 +1,4 @@
+from os import kill
 from whoosh.index import open_dir
 from whoosh.fields import *
 from whoosh.qparser import MultifieldParser
@@ -35,7 +36,7 @@ def searchIn(corpusDir, query, limit=10, sort=None):
     results = searcher.search(query, limit=limit, sortedby=sort)
     return results
 
-def getScore(index, results1, results2, scores):
+def getScore(index, results1, results2, scores:dict, killAloneResult = False):
     len1 = len(results1)
     keys1 = list(results1)
     T = 0
@@ -67,7 +68,7 @@ def countValidScores(scores, T):
             count += 1
     return count
 
-def thresholdMerge(results1, results2, k_max = 10):
+def thresholdMerge(results1:dict, results2:dict, k_max = 10, killAloneResult = False):
     scores = {}
     len1 = len(results1)
     len2 = len(results2)
@@ -78,6 +79,16 @@ def thresholdMerge(results1, results2, k_max = 10):
     k = max(len1, len2)
     k = min(k, k_max)
     
+    keys = list(results1.keys())
+    for ki in keys:
+        if results2.get(ki, None) == None:
+            results1.pop(ki)
+
+    keys = list(results2.keys())
+    for ki in keys:
+        if results1.get(ki, None) == None:
+            results2.pop(ki)
+
     index = 0
     for index in range(k):
         getScore(index, results1, results2, scores)
@@ -117,18 +128,18 @@ def selectField(movies, fieldname):
     return ""
 
 
-def getMovieFrom(index, id, extractFunction):
+def getMovieFrom(index, id, extractFunction, withPlot = False):
     results  = list(searchIn(index, "id:\""+id+"\""))
     r = None
     if len(results) > 0:
         r = results[0]
-    movie = extractFunction(r)
+    movie = extractFunction(r, withPlot)
     return movie
 
-def getMovie(id):
-    imdbMovie  = getMovieFrom(IMDB_INDEX, id, Movie.fromImdb)
-    rottenMovie = getMovieFrom(ROTTEN_INDEX, id, Movie.fromRotten)
-    wikiMovie = getMovieFrom(WIKI_INDEX, id, Movie.fromWiki)
+def getMovie(id, withPlot = False):
+    imdbMovie  = getMovieFrom(IMDB_INDEX, id, Movie.fromImdb, withPlot)
+    rottenMovie = getMovieFrom(ROTTEN_INDEX, id, Movie.fromRotten, withPlot)
+    wikiMovie = getMovieFrom(WIKI_INDEX, id, Movie.fromWiki, withPlot)
 
     if imdbMovie == None and rottenMovie == None and wikiMovie == None:
         return None
@@ -196,7 +207,7 @@ def search(rQuery):
         if query.sortedBy == "score":
             mergedList = sorted(mergedList, key=(lambda m1 : m1.imdb), reverse = True)
         limit = min(query.limit, len(mergedList))
-        return mergedList[0:limit]
+        merged = mergedList[0:limit]
     else:
         sortDict(moviesImdb)
         sortDict(moviesRotten)
@@ -208,5 +219,10 @@ def search(rQuery):
                 merged[k] = scores[k]
         merged = sortDict(merged)
         merged = cutAtRank(merged, query.limit)
+        merged = list(merged.keys())
     
-    return list(merged.keys())
+    L = merged
+
+    return L
+
+

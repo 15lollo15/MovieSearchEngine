@@ -39,17 +39,27 @@ class MyQuery:
             self.query = self.query.replace("ryear", "releaseYear")
 
     def getImdbQuery(self):
-        tmp = self.query
-        tmp = MyQuery.removeNumberField(tmp, "audienceScore")
-        tmp = MyQuery.removeNumberField(tmp, "tomatometerScore")
-        return tmp.strip()
+        q = self.query
+        if ('score' in q) or ('audienceScore' not in q and 'tomatometerScore' not in q):
+            tmp = self.query
+            tmp = MyQuery.removeNumberField(tmp, "audienceScore")
+            tmp = MyQuery.removeNumberField(tmp, "tomatometerScore")
+            return tmp.strip()
+        return ""
+        
 
     def getRottenQuery(self):
-        tmp = self.query
-        tmp = MyQuery.removeNumberField(tmp, "score")
-        return tmp.strip()
+        q = self.query
+        if ('audienceScore'  in q or 'tomatometerScore'  in q) or ('score' not in q):
+            tmp = self.query
+            tmp = MyQuery.removeNumberField(tmp, "score")
+            return tmp.strip()
+        return ""
     
     def getWikiQuery(self):
+        q = self.query
+        if 'audienceScore'  in q or 'tomatometerScore'  in q or 'score' in q:
+            return ""
         tmp = self.query
         tmp = MyQuery.removeNumberField(tmp, "audienceScore")
         tmp = MyQuery.removeNumberField(tmp, "tomatometerScore")

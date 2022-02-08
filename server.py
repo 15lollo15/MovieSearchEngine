@@ -62,6 +62,7 @@ class MyServer(BaseHTTPRequestHandler):
                 if  page > max_page:
                     page = max_page
                 results = results[(page-1)*MyServer.MAX_RESULTS:((page-1)*MyServer.MAX_RESULTS)+MyServer.MAX_RESULTS]
+
                 str = MyServer.createResultsPage(results, page, max_page)
                 str = str.replace(r"%%QUERY%%", query)
             else:
@@ -70,7 +71,7 @@ class MyServer(BaseHTTPRequestHandler):
         elif action == "/view":
             if len(attr) >= 0:
                 movieId = unquote(attr["movie-id"])
-                movie = getMovie(movieId)
+                movie = getMovie(movieId, withPlot=True)
                 str = MyServer.createViewPage(movie)
         elif action.startswith("/style"):
             str = MyServer.readTextFile(action.removeprefix("/"))

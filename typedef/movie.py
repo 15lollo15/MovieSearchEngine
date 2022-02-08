@@ -98,7 +98,7 @@ class Movie:
                 extractedSet.add(splitted[i].strip())
         return extractedSet
 
-    def extractCommonFields(fields, plotFieldId, srcName, withPlot=True):
+    def extractCommonFields(fields, plotFieldId, srcName, withPlot=False):
         id = fields.get("id","")
         title = fields.get("title", "")
         releaseYear = fields.get("releaseYear", "")
@@ -117,7 +117,7 @@ class Movie:
 
         return id, title, releaseYear, directors, cast, genres, srcs, plot
 
-    def fromWiki(wikiResult, withPlot=True):
+    def fromWiki(wikiResult, withPlot=False):
         if wikiResult == None:
             return Movie()
         wikiFields = wikiResult.fields()
@@ -134,7 +134,7 @@ class Movie:
                     srcs = srcs,
                     plot = plot)
 
-    def fromRotten(rottenResult, withPlot=True):
+    def fromRotten(rottenResult, withPlot=False):
         if rottenResult == None:
             return Movie()
         rottenFields = rottenResult.fields()
@@ -156,7 +156,7 @@ class Movie:
                     rcrt = rcrt,
                     rating = rating)
     
-    def fromImdb(imdbResult, withPlot=True):
+    def fromImdb(imdbResult, withPlot=False):
         if imdbResult == None:
             return Movie()
         imdbFields = imdbResult.fields()
