@@ -1,6 +1,6 @@
 import html
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from movie import Movie
+from typedef.movie import Movie
 from searcher import getMovie, search
 from urllib.parse import unquote
 from htmlBuilder import *
@@ -8,6 +8,10 @@ from htmlBuilder import *
 hostName = "localhost"
 serverPort = 8080
 
+# TODO: Rimuovere print
+# TODO: Refactor
+# TODO: Benchmark
+# TODO: Presentazione
 
 class MyServer(BaseHTTPRequestHandler):
 
@@ -34,11 +38,13 @@ class MyServer(BaseHTTPRequestHandler):
         elif action == "/search":
             if len(attr) >= 0 and attr["query"] != "":
                 query = html.unescape(unquote(attr["query"].replace("+", " ")))
+
                 if len(query.replace(" ", "")) == 0:
                     self.sendHome()
                     return
 
                 results = search(query)
+                
                 page = 1
                 if attr.get("p", None) != None and attr["p"] != "":
                     try:
@@ -49,12 +55,14 @@ class MyServer(BaseHTTPRequestHandler):
                 if page < 1:
                     page = 1
 
-                max_page = int(len(results)/MyServer.MAX_RESULTS)
+                if len(results) >= MyServer.MAX_RESULTS:
+                    max_page = int(len(results)/MyServer.MAX_RESULTS)
+                else:
+                    max_page = 1
                 if  page > max_page:
                     page = max_page
                 results = results[(page-1)*MyServer.MAX_RESULTS:((page-1)*MyServer.MAX_RESULTS)+MyServer.MAX_RESULTS]
                 str = MyServer.createResultsPage(results, page, max_page)
-
                 str = str.replace(r"%%QUERY%%", query)
             else:
                 self.sendHome()
@@ -78,29 +86,10 @@ class MyServer(BaseHTTPRequestHandler):
         self.send_header('Location','http://'+hostName+":"+ str(serverPort))
         self.end_headers()
 
-    def replaceCommonTags(htmlString, movie):
-        htmlString = htmlString.replace(r"%%TITLE%%", (movie.title))
-        htmlString = htmlString.replace(r"%%RELEASE_YEAR%%", movie.releaseYear)
-
-        ratingString = iterToComma(movie.getRating())
-        htmlString = htmlString.replace(r"%%RATING%%", ratingString)
-
-        scores = movie.getScores()
-        htmlString = htmlString.replace(r"%%RCRT%%", scores["rcrt"])
-        htmlString = htmlString.replace(r"%%RAUD%%", scores["raud"])
-        htmlString = htmlString.replace(r"%%IMDB%%", scores["imdb"])
-        
-        genresString = iterToComma(movie.getGenres())
-        htmlString = htmlString.replace(r"%%GENRES%%", genresString)
-
-        directorsString = iterToComma(movie.directors)
-        htmlString = htmlString.replace(r"%%DIRECTORS%%", directorsString)
-        return htmlString
-
     def createSingleResult(movie: Movie):
         htmlString = MyServer.readTextFile("html/singleResult.html")
         htmlString = htmlString.replace(r"%%MOVIE_ID%%", movie.id)
-        htmlString = MyServer.replaceCommonTags(htmlString, movie)
+        htmlString = replaceCommonTags(htmlString, movie)
 
         return htmlString
 
@@ -148,7 +137,7 @@ class MyServer(BaseHTTPRequestHandler):
     def createViewPage(movie:Movie):
         htmlString = MyServer.readTextFile("html/viewPage.html");
 
-        htmlString = MyServer.replaceCommonTags(htmlString, movie)
+        htmlString = replaceCommonTags(htmlString, movie)
 
         htmlString = htmlString.replace(r"%%PLOT%%", movie.plot.replace("\n", "<br>"))
 
@@ -157,19 +146,10 @@ class MyServer(BaseHTTPRequestHandler):
         
         srcs = movie.srcs
 
-        htmlString = MyServer.replaceSrcs(htmlString, srcs, "imdb")
-        htmlString = MyServer.replaceSrcs(htmlString, srcs, "rotten")
-        htmlString = MyServer.replaceSrcs(htmlString, srcs, "wiki")
+        htmlString = replaceSrcs(htmlString, srcs, "imdb")
+        htmlString = replaceSrcs(htmlString, srcs, "rotten")
+        htmlString = replaceSrcs(htmlString, srcs, "wiki")
 
-        return htmlString
-
-    def replaceSrcs(htmlString, srcs, key):
-        src = srcs.get(key, "")
-        if src == "":
-            htmlString = htmlString.replace(r"%%"+key.upper()+r"_HIDDEN%%", "hidden")
-        else:
-            htmlString = htmlString.replace(r"%%"+key.upper()+r"_HIDDEN%%", "")
-        htmlString = htmlString.replace(r"%%"+key.upper()+r"_SRC%%", src)
         return htmlString
 
     def readTextFile(file_path):

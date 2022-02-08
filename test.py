@@ -1,7 +1,2 @@
-# -*- coding: utf-8 -*-
-
-s = "cane\ngatto"
-
-print(s.replace("\n", "<br>"))
-
-
+str = "\"the day after tomorrow\""
+print(str.replace("\"", "\\\\\""))

@@ -1,15 +1,18 @@
-from __future__ import print_function
 from whoosh.index import open_dir
 from whoosh.fields import *
 from whoosh.qparser import MultifieldParser
-from whoosh import scoring
-from query import MyQuery
-from query_evaluator import setQueryParser
-from movie import Movie
+from whoosh.qparser import GtLtPlugin
+from whoosh import qparser
+from typedef.movie import Movie
+from typedef.query import MyQuery
 
 IMDB_INDEX = "imdb_index"
 ROTTEN_INDEX = "rotten_index"
 WIKI_INDEX = "wiki_index"
+
+def setQueryParser(qp):
+    qp.replace_plugin(GtLtPlugin())
+    qp.remove_plugin_class(qparser.WildcardPlugin)
 
 def sortDict(dict):
     sorted_values = sorted(dict.values(), reverse=True) # Sort the values
@@ -25,7 +28,7 @@ def sortDict(dict):
 
 def searchIn(corpusDir, query, limit=10, sort=None):
     ix = open_dir(corpusDir)
-    searcher = ix.searcher() # weighting=scoring.TF_IDF()
+    searcher = ix.searcher()
     parser = MultifieldParser(["title", "plot"], schema=ix.schema)
     setQueryParser(parser)
     query = parser.parse(query)
@@ -92,7 +95,6 @@ def thresholdMerge(results1, results2, k_max = 10):
         
 def toDictionary(results, fun):
     dict = {}
-    #print(results)
     for x in results:
         movie = fun(x, False)
         dict[movie] = x.score
@@ -170,53 +172,21 @@ def cutAtRank(map, rank):
 
 def search(rQuery):
     query = MyQuery(rQuery)
-    #print(query.getSortedByImdb())
+
     resultsImdb = searchIn(IMDB_INDEX, query.getImdbQuery(), None, None)
     moviesImdb = toDictionary(resultsImdb, Movie.fromImdb)
-    '''
-    print("IMDB:")
-    for k in moviesImdb.keys():
-        print(k.title, moviesImdb[k])
-        '''
-    
-    
-
+     
     resultsRotten = searchIn(ROTTEN_INDEX, query.getRottenQuery(), None, None)
     moviesRotten = toDictionary(resultsRotten, Movie.fromRotten)
-    '''
-    print("\nROTTEN:")
-    for k in moviesRotten.keys():
-        print(k.title, moviesRotten[k])
-        '''
-    
-    
-
+  
     merged = mergeMovies(moviesImdb, moviesRotten)
 
     resultsWiki = searchIn(WIKI_INDEX, query.getWikiQuery(), None, None)
     moviesWiki = toDictionary(resultsWiki, Movie.fromWiki)
-    
-    '''
-    print("\nWIKI:")
-    for k in moviesWiki.keys():
-        print(k.title, moviesWiki[k])
-        '''
-    
-    
 
     merged = mergeMovies(merged, moviesWiki)
-
-
-    '''
-    print("\n--Inizio merged--")
-    for k in merged.keys():
-        print(k.title)
-    print("--Fine merged--")
-    '''
-
     if query.sortedBy != None:
         mergedList = list(merged.keys())
-        #print(query.sortedBy)
         if query.sortedBy == "releaseYear":
             mergedList = sorted(mergedList, key=(lambda m1 : m1.releaseYear))
         if query.sortedBy == "audienceScore":
@@ -239,12 +209,4 @@ def search(rQuery):
         merged = sortDict(merged)
         merged = cutAtRank(merged, query.limit)
     
-    '''
-    print("\nRisultato")
-    for k in merged.keys():
-        print(k.title, merged[k])
-    '''
-    
-
     return list(merged.keys())
-    
