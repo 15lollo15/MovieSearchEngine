@@ -32,4 +32,5 @@ Q: genres:(comedy, horror)
 Q: cast:(Tom Hanks)
 
 # Voglio film con DiCaprio e di Scorsese
-Q: cast:(dicaprio) AND directors:(martin)
+Q: cast:(dicaprio) directors:(martin)
+
