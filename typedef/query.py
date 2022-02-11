@@ -39,26 +39,37 @@ class MyQuery:
             self.query = self.query.replace("ryear", "releaseYear")
 
     def getImdbQuery(self):
-        q = self.query
-        if ('score' in q) or ('audienceScore' not in q and 'tomatometerScore' not in q):
+        if self.searchableInImdb():
             tmp = self.query
             tmp = MyQuery.removeNumberField(tmp, "audienceScore")
             tmp = MyQuery.removeNumberField(tmp, "tomatometerScore")
             return tmp.strip()
         return ""
         
+    def searchableInImdb(self):
+        q = self.query
+        return (('score' in q) or ('audienceScore' not in q and 'tomatometerScore' not in q)) and self.sortedBy != 'audienceScore' and self.sortedBy != 'tomatometerScore'
+    
+    def searchableInRotten(self):
+        q = self.query
+        return (('audienceScore'  in q or 'tomatometerScore'  in q) or ('score' not in q)) and self.sortedBy != 'score'
+    
+    def searchableInWiki(self):
+        q = self.query
+        return (not('audienceScore'  in q or 'tomatometerScore'  in q or 'score' in q)) and self.sortedBy != 'audienceScore' and self.sortedBy != 'tomatometerScore' and self.sortedBy != 'score'
+    
+    def toKill(self):
+        return "score" in self.getImdbQuery() and ('audienceScore' in self.getRottenQuery() or 'tomatometerScore' in self.getRottenQuery())
 
     def getRottenQuery(self):
-        q = self.query
-        if ('audienceScore'  in q or 'tomatometerScore'  in q) or ('score' not in q):
+        if self.searchableInRotten():
             tmp = self.query
             tmp = MyQuery.removeNumberField(tmp, "score")
             return tmp.strip()
         return ""
     
     def getWikiQuery(self):
-        q = self.query
-        if 'audienceScore'  in q or 'tomatometerScore'  in q or 'score' in q:
+        if not self.searchableInWiki():
             return ""
         tmp = self.query
         tmp = MyQuery.removeNumberField(tmp, "audienceScore")

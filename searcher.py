@@ -68,6 +68,18 @@ def countValidScores(scores, T):
             count += 1
     return count
 
+def difference(results1: dict, results2: dict):
+    keys = list(results1.keys())
+    for ki in keys:
+        if results2.get(ki, None) == None:
+            results1.pop(ki)
+        else:
+            pass
+
+def killAlone(results1, results2):
+    difference(results1, results2)
+    difference(results2, results1)
+
 def thresholdMerge(results1:dict, results2:dict, k_max = 10, killAloneResult = False):
     scores = {}
     len1 = len(results1)
@@ -79,15 +91,9 @@ def thresholdMerge(results1:dict, results2:dict, k_max = 10, killAloneResult = F
     k = max(len1, len2)
     k = min(k, k_max)
     
-    keys = list(results1.keys())
-    for ki in keys:
-        if results2.get(ki, None) == None:
-            results1.pop(ki)
-
-    keys = list(results2.keys())
-    for ki in keys:
-        if results1.get(ki, None) == None:
-            results2.pop(ki)
+    if killAloneResult:
+        killAlone(results1, results2)
+        
 
     index = 0
     for index in range(k):
@@ -176,7 +182,7 @@ def cutAtRank(map, rank):
     count = 0
     keys = list(map.keys())
     for k in keys:
-        if count >= rank:
+        if count >= rank or map[k] == 0:
             map.pop(k)
         count += 1
     return map
@@ -184,15 +190,15 @@ def cutAtRank(map, rank):
 def search(rQuery):
     query = MyQuery(rQuery)
 
-    resultsImdb = searchIn(IMDB_INDEX, query.getImdbQuery(), None, None)
+    resultsImdb = searchIn(IMDB_INDEX, query.getImdbQuery(), query.limit, None)
     moviesImdb = toDictionary(resultsImdb, Movie.fromImdb)
      
-    resultsRotten = searchIn(ROTTEN_INDEX, query.getRottenQuery(), None, None)
+    resultsRotten = searchIn(ROTTEN_INDEX, query.getRottenQuery(), query.limit, None)
     moviesRotten = toDictionary(resultsRotten, Movie.fromRotten)
   
     merged = mergeMovies(moviesImdb, moviesRotten)
 
-    resultsWiki = searchIn(WIKI_INDEX, query.getWikiQuery(), None, None)
+    resultsWiki = searchIn(WIKI_INDEX, query.getWikiQuery(), query.limit, None)
     moviesWiki = toDictionary(resultsWiki, Movie.fromWiki)
 
     merged = mergeMovies(merged, moviesWiki)
@@ -212,12 +218,17 @@ def search(rQuery):
         sortDict(moviesImdb)
         sortDict(moviesRotten)
         sortDict(moviesWiki)
-        scores = thresholdMerge(moviesImdb, moviesWiki, query.limit)
-        scores = thresholdMerge(scores, moviesRotten, query.limit)
+        scores = thresholdMerge(moviesImdb, moviesWiki, query.limit, killAloneResult=False)
+
+        kill = query.toKill()
+            
+        scores = thresholdMerge(scores, moviesRotten, query.limit, killAloneResult=kill)
+
         for k in scores.keys():
             if merged.get(k, -1) != -1:
                 merged[k] = scores[k]
         merged = sortDict(merged)
+
         merged = cutAtRank(merged, query.limit)
         merged = list(merged.keys())
     

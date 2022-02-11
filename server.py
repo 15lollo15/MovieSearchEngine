@@ -12,6 +12,7 @@ serverPort = 8080
 # TODO: Refactor
 # TODO: Benchmark
 # TODO: Presentazione
+# TODO: Selettore pagine và a capo
 
 class MyServer(BaseHTTPRequestHandler):
 
