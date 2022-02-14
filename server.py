@@ -14,6 +14,7 @@ serverPort = 8080
 # TODO: Presentazione
 # TODO: Debian/MAC compatible
 # TODO: Index ALL (forse)
+# TODO: Fix page 10 
 
 class MyServer(BaseHTTPRequestHandler):
 
