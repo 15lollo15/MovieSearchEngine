@@ -187,6 +187,8 @@ def cutAtRank(map, rank):
         count += 1
     return map
 
+
+
 def search(rQuery):
     query = MyQuery(rQuery)
 
@@ -230,10 +232,12 @@ def search(rQuery):
         merged = sortDict(merged)
 
         merged = cutAtRank(merged, query.limit)
-        merged = list(merged.keys())
+        arrayTmp = [(k,merged[k]) for k in merged.keys()]
+        arrayTmp = sorted(arrayTmp, key=(lambda t : (t[1], t[0].title)), reverse = True)
+
+        merged = [t[0] for t in arrayTmp]
     
     L = merged
 
     return L
-
 

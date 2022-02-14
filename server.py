@@ -8,15 +8,14 @@ from htmlBuilder import *
 hostName = "localhost"
 serverPort = 8080
 
-# TODO: Rimuovere print
 # TODO: Refactor
 # TODO: Benchmark
 # TODO: Presentazione
-# TODO: Selettore pagine và a capo
 
 class MyServer(BaseHTTPRequestHandler):
 
     MAX_RESULTS = 10
+    MAX_PAGE = 10
 
     def parsePath(self):
         splitted = self.path.split("?")
@@ -104,7 +103,20 @@ class MyServer(BaseHTTPRequestHandler):
             htmlString = htmlString.replace(r"%%CURRENT_PAGE%%", "")
         return htmlString
 
+    def getFirstPage(p = 1, max_page = 1):
+        fp = 1
+        lastBlock = (max_page - MyServer.MAX_PAGE/2)
+        if p > (MyServer.MAX_PAGE/2):
+            if p >= lastBlock:
+                fp = max_page - MyServer.MAX_PAGE + 1
+            else:
+                fp += p - (MyServer.MAX_PAGE/2)
+        return int(fp)
+        
+
     def createPageSelector(htmlString, p = 1, max_page = 1):
+        fp = MyServer.getFirstPage(p, max_page)
+
         if p == 1:
             htmlString = htmlString.replace(r"%%HIDDEN_PREV%%", "hidden")
         else:
@@ -116,11 +128,12 @@ class MyServer(BaseHTTPRequestHandler):
             htmlString = htmlString.replace(r"%%NEXT_PAGE%%", str(p+1))
         
         pagesString = ""
-        for i in range(1, max_page+1):
-            currentPage = False
-            if i == p:
-                currentPage = True
-            pagesString += MyServer.createPageForm(i, currentPage)
+        if p != max_page:
+            for i in range(fp, min(max_page+1,fp+MyServer.MAX_PAGE)):
+                currentPage = False
+                if i == p:
+                    currentPage = True
+                pagesString += MyServer.createPageForm(i, currentPage)
         return htmlString.replace(r"%%PAGES%%", pagesString)
 
     def createResultsPage(results, p = 1, max_page = 1):
@@ -129,6 +142,9 @@ class MyServer(BaseHTTPRequestHandler):
         string = ""
         for r in results:
             string += MyServer.createSingleResult(r)
+
+        if len(results) == 0:
+            string = "Not found"
         
         htmlString =  htmlString.replace(r"%%RESULTS%%", string)
         htmlString = MyServer.createPageSelector(htmlString, p, max_page)
