@@ -241,3 +241,4 @@ def search(rQuery):
 
     return L
 
+r = search("batman")

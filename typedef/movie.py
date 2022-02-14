@@ -3,7 +3,6 @@ class Movie:
                 id = "", 
                 title = "", 
                 releaseYear = "",
-                origin = "",
                 rating = set(), 
                 genres = set(), 
                 imdb = "",
@@ -17,7 +16,6 @@ class Movie:
         self.id = id
         self.title = title
         self.releaseYear = releaseYear
-        self.origin = origin
         self.rating = rating
         if "NC" in self.rating:
             self.rating.remove("NC")
@@ -70,7 +68,6 @@ class Movie:
         str += self.id + "\n"
         str += self.title + "\n"
         str += self.releaseYear + "\n"
-        str += self.origin + "\n"
         str += self.rating + "\n"
         str += self.genres.__str__() + "\n"
         str += self.imdb + "\n"
@@ -121,13 +118,11 @@ class Movie:
         if wikiResult == None:
             return Movie()
         wikiFields = wikiResult.fields()
-        origin = wikiFields.get("origin", "")
         id, title, releaseYear, directors, cast, genres, srcs, plot = Movie.extractCommonFields(wikiFields,
                                                                                             7, "wiki", withPlot)     
         return Movie(id = id,
                     title = title, 
                     releaseYear = releaseYear, 
-                    origin = origin, 
                     genres= genres,
                     directors = directors,
                     cast = cast,
@@ -185,7 +180,6 @@ class Movie:
         id = movie1.id
         title = Movie.returnLonger(movie1.title, movie2.title)
         releaseYear = Movie.returnLonger(movie1.releaseYear, movie2.releaseYear)
-        origin = Movie.returnLonger(movie1.origin, movie2.origin)
         rating = movie1.rating | movie2.rating
         genres = {x.lower() for x in movie1.genres} | {x.lower() for x in movie2.genres}
         imdb = Movie.returnLonger(movie1.imdb, movie2.imdb)
@@ -195,7 +189,7 @@ class Movie:
         cast = movie1.cast | movie2.cast
         plot = Movie.returnLonger(movie1.plot, movie2.plot)
         srcs = movie1.srcs | movie2.srcs
-        return Movie(id, title, releaseYear, origin, rating, genres, imdb, raud, rcrt, directors, cast, plot, srcs)
+        return Movie(id, title, releaseYear, rating, genres, imdb, raud, rcrt, directors, cast, plot, srcs)
 
 
     def compareByReleaseYear(m1, m2):

@@ -15,7 +15,6 @@ schema = Schema(
                 id = ID(stored = True),
                 releaseYear = NUMERIC(stored = True, sortable=True),
                 title  = TEXT(stored = True, analyzer = my_analyzer, sortable=True),
-                origin = STORED,
                 directors = TEXT(stored = True),
                 cast = TEXT(stored = True),
                 genres = KEYWORD(stored = True, commas=True, scorable=True, lowercase=True),
@@ -41,7 +40,6 @@ for doc in docs_files:
     if int(releaseYear) < 1990 or int(releaseYear) > 2015:
         continue
     title = row[1]
-    origin = row[2]
     directors = row[3]
     cast = row[4]
     genres = row[5]
@@ -53,7 +51,6 @@ for doc in docs_files:
                         id = (releaseYear + " " + html.unescape(title).replace("&", "and")),
                         releaseYear = releaseYear, 
                         title = title, 
-                        origin = origin,
                         directors = directors,
                         cast = cast,
                         genres = genres,

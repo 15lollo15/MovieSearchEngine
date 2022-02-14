@@ -1,36 +1,30 @@
-Ricerca per keyword
-Ricerca su Field -> Tricky
-Phrasal query
-TOP
-
-# Voglio il film "The Day After Tomorrow", lo posso ottenere con la query Q (non phrasal) nonostante contenga parole
-# "comuni"
-Q: the day after tommorow
+# Voglio il film "The Day After Tomorrow", lo posso ottenere con la query Q (non phrasal) nonostante contenga parole "comuni"
+the day after tomorrow
 
 # Voglio il film "The Day After Tomorrow", lo posso ottenere anche con una phrasal query
-Q: "the day after tomorrow"
+"the day after tomorrow"
 
 # Voglio i film di batman usciti dopo il 2000
-Q: batman ryear:>2000
+batman ryear:>2000
 
 # Voglio i film con batman e superman oppure quelli con batman e catwoman
-Q: batman AND (superman OR catwoman)
+batman AND (superman OR catwoman)
 
 # Voglio i film di spider-man che hanno preso almeno 6 su IMDB e almeno 60 su Rotten(Audience Score)
-Q: spider-man imdb:>=6 raud:>=60
+spider-man imdb:>=6 raud:>=60
 
 # Top 100 film del 2000 secondi Tomatometer
-Q: ryear:2000 TOP:100 SORT_BY:rcrt
+ryear:2000 TOP:100 SORT_BY:rcrt
 
 # Voglio "Forrest Gump" sapendo che c'è un uomo che corre, che ha combattuto in vietnam e che investe in azioni Apple
-Q: man run vietnam apple
+man run vietnam apple
 
 # Voglio film comedy-horror
-Q: genres:(comedy, horror)
+genres:(comedy, horror)
 
 # Voglio film con "Tom Hanks"
-Q: cast:(Tom Hanks)
+cast:(Tom Hanks)
 
 # Voglio film con DiCaprio e di Scorsese
-Q: cast:(dicaprio) directors:(martin)
+cast:(dicaprio) directors:(martin)
 

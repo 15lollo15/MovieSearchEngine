@@ -1,5 +1,6 @@
 import html
 from http.server import BaseHTTPRequestHandler, HTTPServer
+import webbrowser
 from typedef.movie import Movie
 from searcher import getMovie, search
 from urllib.parse import unquote
@@ -11,6 +12,8 @@ serverPort = 8080
 # TODO: Refactor
 # TODO: Benchmark
 # TODO: Presentazione
+# TODO: Debian/MAC compatible
+# TODO: Index ALL (forse)
 
 class MyServer(BaseHTTPRequestHandler):
 
@@ -178,10 +181,10 @@ class MyServer(BaseHTTPRequestHandler):
         return string
 
 
-if __name__ == "__main__":        
+if __name__ == "__main__":
     webServer = HTTPServer((hostName, serverPort), MyServer)
     print("Server started http://%s:%s" % (hostName, serverPort))
-    #webbrowser.open("http://" + hostName + ":" + str(serverPort))
+    webbrowser.open("http://" + hostName + ":" + str(serverPort))
     try:
         webServer.serve_forever()
     except KeyboardInterrupt:

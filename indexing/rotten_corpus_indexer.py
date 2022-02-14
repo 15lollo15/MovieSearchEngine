@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from cgi import print_directory
 import html
-from turtle import title
 from whoosh.index import create_in
 from whoosh.fields import *
 import os, os.path
