@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from cgi import print_directory
 import html
 from whoosh.index import create_in
 from whoosh.fields import *
 import os, os.path
-import csv
 from whoosh.analysis import StemmingAnalyzer, CharsetFilter
 from whoosh.support.charset import default_charset, charset_table_to_dict
 

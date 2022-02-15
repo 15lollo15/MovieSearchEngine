@@ -6,22 +6,19 @@ from searcher import getMovie, search
 from urllib.parse import unquote
 from htmlBuilder import *
 
+# TODO: Check selectField
+
+# Connection parameters
 hostName = "localhost"
 serverPort = 8080
 
-# TODO: Refactor
-# TODO: Benchmark
-# TODO: Presentazione
-# TODO: Debian/MAC compatible
-# TODO: Index ALL (forse)
-# TODO: Fix page 10 
-
 class MyServer(BaseHTTPRequestHandler):
 
-    MAX_RESULTS = 10
-    MAX_PAGE = 10
+    MAX_RESULTS = 10    # How many results are shown by default in a page
+    MAX_PAGE = 10       # How many pages are shown by the page selector
 
-    def parsePath(self):
+    def parseURL(self):
+        '''Return the URL attributes in a dict'''
         splitted = self.path.split("?")
         action = splitted[0]
         attr = {}
@@ -34,13 +31,14 @@ class MyServer(BaseHTTPRequestHandler):
         return action, attr
 
     def do_GET(self):
-        action, attr = self.parsePath()
+        action, attr = self.parseURL()
         str = ""
         content_type = "text/html"
-        if action == "/":
+        if action == "/":   # Default case, return the homepage
             str = MyServer.readTextFile("html/search.html")
-        elif action == "/search":
+        elif action == "/search":   # Read the URL attributes and try to search
             if len(attr) >= 0 and attr["query"] != "":
+                # Query Cleaning
                 query = html.unescape(unquote(attr["query"].replace("+", " ")))
 
                 if len(query.replace(" ", "")) == 0:
@@ -49,6 +47,7 @@ class MyServer(BaseHTTPRequestHandler):
 
                 results = search(query)
                 
+                # Splitting results in pages
                 page = 1
                 if attr.get("p", None) != None and attr["p"] != "":
                     try:
@@ -65,19 +64,22 @@ class MyServer(BaseHTTPRequestHandler):
                     max_page = 1
                 if  page > max_page:
                     page = max_page
+                
+                # Extracts results in current page 
                 results = results[(page-1)*MyServer.MAX_RESULTS:((page-1)*MyServer.MAX_RESULTS)+MyServer.MAX_RESULTS]
 
+                # Page building
                 str = MyServer.createResultsPage(results, page, max_page)
                 str = str.replace(r"%%QUERY%%", query)
-            else:
+            else:   # If the query is empty, the user is sent to homepage
                 self.sendHome()
                 return
-        elif action == "/view":
+        elif action == "/view": # View all detail of a movie
             if len(attr) >= 0:
                 movieId = unquote(attr["movie-id"])
                 movie = getMovie(movieId, withPlot=True)
                 str = MyServer.createViewPage(movie)
-        elif action.startswith("/style"):
+        elif action.startswith("/style"): # Only for style requests
             str = MyServer.readTextFile(action.removeprefix("/"))
             content_type = "text/css"
 
@@ -87,11 +89,13 @@ class MyServer(BaseHTTPRequestHandler):
         self.wfile.write(bytes(str, "utf-8"))
 
     def sendHome(self):
+        '''Redirect the user to homepage'''
         self.send_response(301)
         self.send_header('Location','http://'+hostName+":"+ str(serverPort))
         self.end_headers()
 
     def createSingleResult(movie: Movie):
+        '''Build a single movie block'''
         htmlString = MyServer.readTextFile("html/singleResult.html")
         htmlString = htmlString.replace(r"%%MOVIE_ID%%", movie.id)
         htmlString = replaceCommonTags(htmlString, movie)
@@ -99,6 +103,7 @@ class MyServer(BaseHTTPRequestHandler):
         return htmlString
 
     def createPageForm(p, currentPage = False):
+        '''Build a form that sends the user to the page 'p' '''
         htmlString = MyServer.readTextFile("html/pageform.html")
         htmlString = htmlString.replace(r"%%PAGE%%", str(p))
         if currentPage:
@@ -108,6 +113,7 @@ class MyServer(BaseHTTPRequestHandler):
         return htmlString
 
     def getFirstPage(p = 1, max_page = 1):
+        '''Selects pages shown by the page selector'''
         fp = 1
         lastBlock = (max_page - MyServer.MAX_PAGE/2)
         if p > (MyServer.MAX_PAGE/2):
@@ -119,8 +125,10 @@ class MyServer(BaseHTTPRequestHandler):
         
 
     def createPageSelector(htmlString, p = 1, max_page = 1):
+        '''Build the page selector'''
         fp = MyServer.getFirstPage(p, max_page)
 
+        # Decides wheather put the previous/next button or not
         if p == 1:
             htmlString = htmlString.replace(r"%%HIDDEN_PREV%%", "hidden")
         else:
@@ -131,18 +139,20 @@ class MyServer(BaseHTTPRequestHandler):
         else:
             htmlString = htmlString.replace(r"%%NEXT_PAGE%%", str(p+1))
         
+        # For every page builds a page Form
         pagesString = ""
-        if p != max_page:
-            for i in range(fp, min(max_page+1,fp+MyServer.MAX_PAGE)):
-                currentPage = False
-                if i == p:
-                    currentPage = True
-                pagesString += MyServer.createPageForm(i, currentPage)
+        for i in range(fp, min(max_page+1,fp+MyServer.MAX_PAGE)):
+            currentPage = False
+            if i == p:
+                currentPage = True
+            pagesString += MyServer.createPageForm(i, currentPage)
         return htmlString.replace(r"%%PAGES%%", pagesString)
 
     def createResultsPage(results, p = 1, max_page = 1):
+        '''Build a result page'''
         htmlString = MyServer.readTextFile("html/results.html")
 
+        # For every result build a movie box
         string = ""
         for r in results:
             string += MyServer.createSingleResult(r)
@@ -157,6 +167,7 @@ class MyServer(BaseHTTPRequestHandler):
 
 
     def createViewPage(movie:Movie):
+        '''Build a page with all movie informations'''
         htmlString = MyServer.readTextFile("html/viewPage.html");
 
         htmlString = replaceCommonTags(htmlString, movie)
@@ -190,7 +201,6 @@ if __name__ == "__main__":
         webServer.serve_forever()
     except KeyboardInterrupt:
         pass
-    
-    
+
     webServer.server_close()
     print("Server stopped.")

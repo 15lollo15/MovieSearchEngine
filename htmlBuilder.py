@@ -1,11 +1,13 @@
 def iterToComma(iter):
-        string = ""
-        for x in iter:
-            string += x + ", "
-        string = string[:-2]
-        return string
+    '''Converts iterable into a string comma separated'''
+    string = ""
+    for x in iter:
+        string += x + ", "
+    string = string[:-2]
+    return string
 
 def iterToLi(iter):
+    '''Converts iterable into a string containg html list item'''
     string = ""
     for x in iter:
         string += "<li>" + x + "</li>"
@@ -13,6 +15,7 @@ def iterToLi(iter):
     return string
 
 def replaceCommonTags(htmlString, movie):
+    '''Replaces the fields in marked places'''
     htmlString = htmlString.replace(r"%%TITLE%%", (movie.title))
     htmlString = htmlString.replace(r"%%RELEASE_YEAR%%", movie.releaseYear)
 
@@ -32,6 +35,7 @@ def replaceCommonTags(htmlString, movie):
     return htmlString
 
 def replaceSrcs(htmlString, srcs, key):
+    '''Makes src visible if is not "", not visible otherwise'''
     src = srcs.get(key, "")
     if src == "":
         htmlString = htmlString.replace(r"%%"+key.upper()+r"_HIDDEN%%", "hidden")
